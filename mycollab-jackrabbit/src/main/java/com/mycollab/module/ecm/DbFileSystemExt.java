@@ -1,24 +1,27 @@
 /**
- * This file is part of mycollab-jackrabbit.
- *
- * mycollab-jackrabbit is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-jackrabbit is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-jackrabbit.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.ecm;
 
-import com.mycollab.configuration.DatabaseConfiguration;
-import com.mycollab.configuration.SiteConfiguration;
+import com.mycollab.spring.AppContextUtil;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.jackrabbit.core.fs.db.DbFileSystem;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+
+import javax.sql.DataSource;
 
 /**
  * Db file system of mycollab jackrabbit storage
@@ -29,11 +32,11 @@ import org.apache.jackrabbit.core.fs.db.DbFileSystem;
 public class DbFileSystemExt extends DbFileSystem {
 
     public DbFileSystemExt() {
-        DatabaseConfiguration dbConf = SiteConfiguration.getDatabaseConfiguration();
-        this.schema = "mysql";
-        this.driver = dbConf.driverClass();
-        this.user = dbConf.getUser();
-        this.password = dbConf.getPassword();
-        this.url = dbConf.getDbUrl();
+        HikariDataSource ds = AppContextUtil.getSpringBean(HikariDataSource.class);
+        this.schema = DbUtil.getSchemaType(ds.getDriverClassName());
+        this.driver = ds.getDriverClassName();
+        this.user = ds.getUsername();
+        this.password = ds.getPassword();
+        this.url = ds.getJdbcUrl();
     }
 }

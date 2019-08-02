@@ -23,21 +23,13 @@
         <result column="numComments" jdbcType="INTEGER" property="numComments" />
         <result column="numFollowers" jdbcType="INTEGER" property="numFollowers" />
         <result column="priority" jdbcType="VARCHAR" property="priority" />
-        <result column="sAccountId" jdbcType="INTEGER" property="sAccountId" />
+        <result column="sAccountId" jdbcType="INTEGER" property="saccountid" />
         <result column="billableHours" property="billableHours" jdbcType="DOUBLE"/>
         <result column="nonBillableHours" property="nonBillableHours" jdbcType="DOUBLE"/>
         <result column="startDate" jdbcType="TIMESTAMP" property="startDate" />
         <result column="endDate" jdbcType="TIMESTAMP" property="endDate" />
         <result column="milestoneId" jdbcType="INTEGER" property="milestoneId" />
         <result column="milestoneName" jdbcType="VARCHAR" property="milestoneName" />
-    </resultMap>
-
-    <resultMap id="BaseResultTaskCountMap" type="com.mycollab.module.project.domain.ProjectTicketCount">
-        <result column="assignUser" jdbcType="VARCHAR" property="assignUser" />
-        <result column="assignUserFullName" jdbcType="VARCHAR" property="assignUserFullName" />
-        <result column="projectId" jdbcType="INTEGER" property="projectId" />
-        <result column="projectName" jdbcType="VARCHAR" property="projectName" />
-        <result column="taskCount" jdbcType="INTEGER" property="taskCount" />
     </resultMap>
 
     <sql id="queryRiskSearchCriteria">
@@ -63,8 +55,8 @@
             ${searchCriteria.assignUser.operation} mainTbl.assignUser = @{searchCriteria.assignUser.value}
         #end
         
-        #ifnotnull($searchCriteria.isOpenned)
-            ${searchCriteria.isOpenned.operation} mainTbl.status NOT IN ('Closed')
+        #ifnotnull($searchCriteria.open)
+            ${searchCriteria.open.operation} mainTbl.status NOT IN ('Closed')
         #end
 
         #ifnotnull($searchCriteria.unAssignee)
@@ -98,7 +90,7 @@
         #end
         
         #ifnotnull($searchCriteria.dueDate)
-            ${searchCriteria.dueDate.operation} CAST(mainTbl.dueDate AS DATE ) ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+            ${searchCriteria.dueDate.operation} mainTbl.dueDate ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
         #end
 
         #selectExpr($searchCriteria.extraFields)
@@ -128,8 +120,8 @@
             ${searchCriteria.assignUser.operation} mainTbl.assignUser = @{searchCriteria.assignUser.value}
         #end
         
-        #ifnotnull($searchCriteria.isOpenned)
-            ${searchCriteria.isOpenned.operation} mainTbl.status NOT IN ('Verified')
+        #ifnotnull($searchCriteria.open)
+            ${searchCriteria.open.operation} mainTbl.status NOT IN ('Verified')
         #end
 
         #ifnotnull($searchCriteria.unAssignee)
@@ -162,7 +154,35 @@
         #end
         
          #ifnotnull($searchCriteria.dueDate)
-            ${searchCriteria.dueDate.operation} CAST(mainTbl.dueDate AS DATE ) ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+            ${searchCriteria.dueDate.operation} mainTbl.dueDate ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+        #end
+
+        #ifnotnull($searchCriteria.versionIds)
+            ${searchCriteria.versionIds.operation}  EXISTS (SELECT 1
+                FROM m_prj_ticket_relation
+                WHERE m_prj_ticket_relation.rel IN ('AffVersion', 'FixVersion')
+                    AND m_prj_ticket_relation.type = 'Project-Version'
+                    AND m_prj_ticket_relation.ticketType = 'Project-Bug'
+                    AND m_prj_ticket_relation.ticketId = mainTbl.id
+                    AND m_prj_ticket_relation.typeId IN
+                    #repeat(${searchCriteria.versionIds.values} $versionId "," "(" ")")
+                        @{versionId}
+                    #end
+            LIMIT 1)
+        #end
+
+        #ifnotnull($searchCriteria.componentIds)
+            ${searchCriteria.componentIds.operation}  EXISTS (SELECT 1
+                FROM m_prj_ticket_relation
+                WHERE m_prj_ticket_relation.rel IN ('Component')
+                    AND m_prj_ticket_relation.type = 'Project-Component'
+                    AND m_prj_ticket_relation.ticketType = 'Project-Bug'
+                    AND m_prj_ticket_relation.ticketId = mainTbl.id
+                    AND m_prj_ticket_relation.typeId IN
+                    #repeat(${searchCriteria.componentIds.values} $componentId "," "(" ")")
+                        @{componentId}
+                    #end
+            LIMIT 1)
         #end
 
         #selectExpr($searchCriteria.extraFields)
@@ -192,8 +212,8 @@
             ${searchCriteria.assignUser.operation} mainTbl.assignUser = @{searchCriteria.assignUser.value}
         #end
         
-        #ifnotnull($searchCriteria.isOpenned)
-            ${searchCriteria.isOpenned.operation} mainTbl.status NOT IN ('Closed')
+        #ifnotnull($searchCriteria.open)
+            ${searchCriteria.open.operation} mainTbl.status NOT IN ('Closed')
         #end
 
         #ifnotnull($searchCriteria.unAssignee)
@@ -226,7 +246,35 @@
         #end
         
         #ifnotnull($searchCriteria.dueDate)
-            ${searchCriteria.dueDate.operation} CAST(mainTbl.dueDate AS DATE) ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+            ${searchCriteria.dueDate.operation} mainTbl.dueDate ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+        #end
+
+        #ifnotnull($searchCriteria.versionIds)
+            ${searchCriteria.versionIds.operation}  EXISTS (SELECT 1
+                FROM m_prj_ticket_relation
+                WHERE m_prj_ticket_relation.rel IN ('AffVersion', 'FixVersion')
+                    AND m_prj_ticket_relation.type = 'Project-Version'
+                    AND m_prj_ticket_relation.ticketType = 'Project-Task'
+                    AND m_prj_ticket_relation.ticketId = mainTbl.id
+                    AND m_prj_ticket_relation.typeId IN
+                    #repeat(${searchCriteria.versionIds.values} $versionId "," "(" ")")
+                        @{versionId}
+                    #end
+            LIMIT 1)
+        #end
+
+        #ifnotnull($searchCriteria.componentIds)
+            ${searchCriteria.componentIds.operation}  EXISTS (SELECT 1
+                FROM m_prj_ticket_relation
+                WHERE m_prj_ticket_relation.rel IN ('Component')
+                    AND m_prj_ticket_relation.type = 'Project-Component'
+                    AND m_prj_ticket_relation.ticketType = 'Project-Task'
+                    AND m_prj_ticket_relation.ticketId = mainTbl.id
+                    AND m_prj_ticket_relation.typeId IN
+                    #repeat(${searchCriteria.componentIds.values} $componentId "," "(" ")")
+                        @{componentId}
+                    #end
+            LIMIT 1)
         #end
 
         #selectExpr($searchCriteria.extraFields)
@@ -256,8 +304,8 @@
             ${searchCriteria.assignUser.operation} mainTbl.assignUser = @{searchCriteria.assignUser.value}
         #end
 
-        #ifnotnull($searchCriteria.isOpenned)
-            ${searchCriteria.isOpenned.operation} mainTbl.status NOT IN ('Closed')
+        #ifnotnull($searchCriteria.open)
+            ${searchCriteria.open.operation} mainTbl.status NOT IN ('Closed')
         #end
 
         #ifnotnull($searchCriteria.unAssignee)
@@ -290,22 +338,22 @@
         #end
 
         #ifnotnull($searchCriteria.dueDate)
-            ${searchCriteria.dueDate.operation} CAST(mainTbl.enddate AS DATE) ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
+            ${searchCriteria.dueDate.operation} mainTbl.enddate ${searchCriteria.dueDate.comparison} @{searchCriteria.dueDate.value}
         #end
 
         #selectExpr($searchCriteria.extraFields)
         ]]>
     </sql>
 
-    <sql id="selectGenericTaskFromRisk">
+    <sql id="selectTicketFromRisk">
     <![CDATA[
           SELECT mainTbl.name, mainTbl.description, mainTbl.assignUser,
-            concat(assignUserTbl.firstname, ' ', LTRIM(concat(IFNULL(assignUserTbl.middlename, ''), ' ')), assignUserTbl.lastname) AS assignUserFullName,
+            concat(assignUserTbl.firstname, ' ', assignUserTbl.lastname) AS assignUserFullName,
             assignUserTbl.avatarId as assignUserAvatarId,
             createdUserTbl.username AS createdUser, createdUserTbl.avatarId as createdUserAvatarId,
-            concat(createdUserTbl.firstname, ' ', LTRIM(concat(IFNULL(createdUserTbl.middlename, ''), ' ')), createdUserTbl.lastname) AS createdUserFullName,
+            concat(createdUserTbl.firstname, ' ', createdUserTbl.lastname) AS createdUserFullName,
             mainTbl.dueDate, mainTbl.projectId, m_prj_project.name AS projectName,
-            m_prj_project.shortname AS projectShortName, NULL AS extraTypeId, mainTbl.status,
+            m_prj_project.shortname AS projectShortName, m_prj_ticket_key.ticketKey AS extraTypeId, mainTbl.status,
             'Project-Risk' AS type, mainTbl.id AS typeId, mainTbl.createdTime, mainTbl.lastUpdatedTime,
             (SELECT count(*)
                     FROM m_comment
@@ -319,75 +367,77 @@
             mainTbl.originalEstimate, mainTbl.remainEstimate,
             m_prj_milestone.name AS milestoneName
           FROM m_prj_risk AS mainTbl
+              INNER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id)
               LEFT OUTER JOIN s_user assignUserTbl ON (mainTbl.assignUser=assignUserTbl.username)
               LEFT OUTER JOIN s_user createdUserTbl ON (mainTbl.createdUser=createdUserTbl.username)
-              LEFT OUTER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id AND m_prj_project.projectStatus="Open")
               LEFT OUTER JOIN m_prj_milestone ON (mainTbl.milestoneId=m_prj_milestone.id)
+              LEFT OUTER JOIN m_prj_ticket_key ON (mainTbl.id = m_prj_ticket_key.ticketId AND m_prj_ticket_key.ticketType = 'Project-Risk')
         ]]>
     </sql>
 
-    <sql id="selectGenericTaskFromMilestone">
+    <sql id="selectTicketFromMilestone">
         <![CDATA[
           SELECT mainTbl.name, mainTbl.description, mainTbl.assignUser,
-            concat(assignUserTbl.firstname, ' ', LTRIM(concat(IFNULL(assignUserTbl.middlename, ''), ' ')), assignUserTbl.lastname) AS assignUserFullName,
+            concat(assignUserTbl.firstname, ' ', assignUserTbl.lastname) AS assignUserFullName,
             assignUserTbl.avatarId as assignUserAvatarId,
             createdUserTbl.username AS createdUser, createdUserTbl.avatarId as createdUserAvatarId,
-            concat(createdUserTbl.firstname, ' ', LTRIM(concat(IFNULL(createdUserTbl.middlename, ''), ' ')), createdUserTbl.lastname) AS createdUserFullName,
+            concat(createdUserTbl.firstname, ' ', createdUserTbl.lastname) AS createdUserFullName,
             mainTbl.endDate AS dueDate, mainTbl.projectId, m_prj_project.name AS projectName,
             m_prj_project.shortname AS projectShortName, NULL AS extraTypeId, mainTbl.status,
             'Project-Milestone' AS type, mainTbl.id AS typeId, mainTbl.createdTime, mainTbl.lastUpdatedTime,
             (SELECT count(*)
                     FROM m_comment
                     WHERE m_comment.type='Project-Milestone' AND m_comment.typeId=mainTbl.id) AS numComments,
-            0 AS numFollowers, 0 AS billableHours, 0 AS nonBillableHours, "" AS priority,
+            0 AS numFollowers, 0 AS billableHours, 0 AS nonBillableHours, '' AS priority,
             mainTbl.sAccountId, mainTbl.startDate, mainTbl.endDate,
             mainTbl.id AS milestoneId, 0 AS originalEstimate, 0 AS remainEstimate,
             mainTbl.name AS milestoneName
           FROM m_prj_milestone AS mainTbl
+            INNER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id)
             LEFT OUTER JOIN s_user assignUserTbl ON (mainTbl.assignUser=assignUserTbl.username)
             LEFT OUTER JOIN s_user createdUserTbl ON (mainTbl.createdUser=createdUserTbl.username)
-            LEFT OUTER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id AND m_prj_project.projectStatus="Open")
         ]]>
     </sql>
 
-    <sql id="selectGenericTaskFromBug">
+    <sql id="selectTicketFromBug">
     <![CDATA[
           SELECT mainTbl.name, mainTbl.description, mainTbl.assignUser,
-                concat(assignUserTbl.firstname, ' ', LTRIM(concat(IFNULL(assignUserTbl.middlename, ''), ' ')), assignUserTbl.lastname) AS assignUserFullName,
+                concat(assignUserTbl.firstname, ' ', assignUserTbl.lastname) AS assignUserFullName,
                 assignUserTbl.avatarId as assignUserAvatarId,
                 createdUserTbl.username AS createdUser, createdUserTbl.avatarId as createdUserAvatarId,
-                concat(createdUserTbl.firstname, ' ', LTRIM(concat(IFNULL(createdUserTbl.middlename, ''), ' ')), createdUserTbl.lastname) AS createdUserFullName,
+                concat(createdUserTbl.firstname, ' ', createdUserTbl.lastname) AS createdUserFullName,
                 mainTbl.dueDate, mainTbl.projectId, m_prj_project.name AS projectName,
-                m_prj_project.shortname AS projectShortName, mainTbl.bugkey AS extraTypeId, mainTbl.status,
+                m_prj_project.shortname AS projectShortName, m_prj_ticket_key.ticketKey AS extraTypeId, mainTbl.status,
                 'Project-Bug' AS type, mainTbl.id AS typeId, mainTbl.createdTime, mainTbl.lastUpdatedTime,
                 (SELECT count(*)
                     FROM m_comment
                     WHERE m_comment.type='Project-Bug' AND m_comment.typeId=mainTbl.id) AS numComments,
-            (SELECT COUNT(*) FROM m_monitor_item WHERE m_monitor_item.typeId = mainTbl.id AND m_monitor_item.type = 'Project-Bug') AS numFollowers,
-            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = mainTbl.projectId
+                (SELECT COUNT(*) FROM m_monitor_item WHERE m_monitor_item.typeId = mainTbl.id AND m_monitor_item.type = 'Project-Bug') AS numFollowers,
+                (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = mainTbl.projectId
                      AND m_prj_time_logging.type='Project-Bug' AND m_prj_time_logging.typeId=mainTbl.id AND m_prj_time_logging.isBillable = 1) AS billableHours,
-            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = mainTbl.projectId
+                (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = mainTbl.projectId
                      AND m_prj_time_logging.type='Project-Bug' AND m_prj_time_logging.typeId=mainTbl.id AND m_prj_time_logging.isBillable = 0) AS nonBillableHours,
                 mainTbl.priority, mainTbl.sAccountId, mainTbl.startDate, mainTbl.endDate,
                 mainTbl.milestoneId, mainTbl.originalEstimate, mainTbl.remainEstimate,
                 m_prj_milestone.name AS milestoneName
-          FROM m_tracker_bug AS mainTbl
+          FROM m_prj_bug AS mainTbl
+              INNER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id)
               LEFT OUTER JOIN s_user AS assignUserTbl ON (mainTbl.assignUser=assignUserTbl.username)
               LEFT OUTER JOIN s_user createdUserTbl ON (mainTbl.createdUser=createdUserTbl.username)
-              LEFT OUTER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id AND m_prj_project.projectStatus="Open")
               LEFT OUTER JOIN m_prj_milestone ON (mainTbl.milestoneId=m_prj_milestone.id)
+              LEFT OUTER JOIN m_prj_ticket_key ON (m_prj_ticket_key.ticketId = mainTbl.id AND m_prj_ticket_key.ticketType = 'Project-Bug')
         ]]>
     </sql>
 
-    <sql id="selectGenericTaskFromTask">
+    <sql id="selectTicketFromTask">
     <![CDATA[
           SELECT mainTbl.name,  mainTbl.description, mainTbl.assignUser,
-            concat(assignUserTbl.firstname, ' ', LTRIM(concat(IFNULL(assignUserTbl.middlename, ''), ' ')), assignUserTbl.lastname) AS assignUserFullName,
+            concat(assignUserTbl.firstname, ' ', assignUserTbl.lastname) AS assignUserFullName,
             assignUserTbl.avatarId as assignUserAvatarId,
             createdUserTbl.username AS createdUser, createdUserTbl.avatarId as createdUserAvatarId,
-            concat(createdUserTbl.firstname, ' ', LTRIM(concat(IFNULL(createdUserTbl.middlename, ''), ' ')), createdUserTbl.lastname) AS createdUserFullName,
+            concat(createdUserTbl.firstname, ' ', createdUserTbl.lastname) AS createdUserFullName,
             mainTbl.dueDate, mainTbl.projectId, m_prj_project.name AS projectName,
-            m_prj_project.shortname AS projectShortName, mainTbl.taskkey AS extraTypeId, mainTbl.status,
+            m_prj_project.shortname AS projectShortName, m_prj_ticket_key.ticketKey AS extraTypeId, mainTbl.status,
             'Project-Task' AS type, mainTbl.id AS typeId, mainTbl.createdTime, mainTbl.lastUpdatedTime,
             (SELECT count(*)
                     FROM m_comment
@@ -401,14 +451,15 @@
             mainTbl.originalEstimate, mainTbl.remainEstimate,
             m_prj_milestone.name AS milestoneName
           FROM m_prj_task AS mainTbl
+            INNER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id)
             LEFT OUTER JOIN s_user assignUserTbl ON (mainTbl.assignUser=assignUserTbl.username)
             LEFT OUTER JOIN s_user createdUserTbl ON (mainTbl.createdUser=createdUserTbl.username)
-            LEFT OUTER JOIN m_prj_project ON (mainTbl.projectId=m_prj_project.id AND m_prj_project.projectStatus="Open")
             LEFT OUTER JOIN m_prj_milestone ON (mainTbl.milestoneId=m_prj_milestone.id)
+            LEFT OUTER JOIN m_prj_ticket_key ON (mainTbl.id = m_prj_ticket_key.ticketId AND m_prj_ticket_key.ticketType = 'Project-Task')
         ]]>
     </sql>
 
-    <select id="getTotalCountFromRisk" parameterType="ProjectTicketSearchCriteria"
+    <select id="getTotalCountFromRisk" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
         resultType="int" lang="velocity">
         SELECT count(*) as totalCount FROM m_prj_risk AS mainTbl
         #ifnotnull($_parameter.searchCriteria)
@@ -418,9 +469,9 @@
         #end
     </select>
 
-    <select id="getTotalCountFromBug" parameterType="ProjectTicketSearchCriteria"
+    <select id="getTotalCountFromBug" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
         resultType="int" lang="velocity">
-        SELECT count(*) as totalCount FROM m_tracker_bug AS mainTbl
+        SELECT count(*) as totalCount FROM m_prj_bug AS mainTbl
         #ifnotnull($_parameter.searchCriteria)
             #trimext("WHERE" "AND|OR")
                 <include refid="queryBugSearchCriteria" />
@@ -428,7 +479,7 @@
         #end
     </select>
 
-    <select id="getTotalCountFromTask" parameterType="ProjectTicketSearchCriteria"
+    <select id="getTotalCountFromTask" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
         resultType="int" lang="velocity">
         SELECT count(*) as totalCount FROM m_prj_task AS mainTbl
         #ifnotnull($_parameter.searchCriteria)
@@ -438,7 +489,7 @@
         #end
     </select>
 
-    <select id="getTotalCountFromMilestone" parameterType="ProjectTicketSearchCriteria"
+    <select id="getTotalCountFromMilestone" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
             resultType="int" lang="velocity">
         SELECT count(*) as totalCount FROM m_prj_milestone AS mainTbl
         #ifnotnull($_parameter.searchCriteria)
@@ -458,9 +509,9 @@
         lastUpdatedTime DESC
     </sql>
 
-    <select id="findTicketsByCriteria" parameterType="ProjectTicketSearchCriteria" resultMap="BaseResultMap" lang="velocity">
+    <select id="findTicketsByCriteria" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria" resultMap="BaseResultMap" lang="velocity">
         (
-        <include refid="selectGenericTaskFromTask" />
+        <include refid="selectTicketFromTask" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryTaskSearchCriteria" />
@@ -469,7 +520,7 @@
         )
         UNION
         (
-        <include refid="selectGenericTaskFromRisk" />
+        <include refid="selectTicketFromRisk" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryRiskSearchCriteria" />
@@ -479,7 +530,7 @@
 
         UNION
         (
-        <include refid="selectGenericTaskFromBug" />
+        <include refid="selectTicketFromBug" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryBugSearchCriteria" />
@@ -492,9 +543,10 @@
         #end
     </select>
 
-    <select id="findPageableListByCriteria" parameterType="ProjectTicketSearchCriteria" resultMap="BaseResultMap" lang="velocity">
+    <select id="findPageableListByCriteria" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
+            resultMap="BaseResultMap" lang="velocity">
         (
-        <include refid="selectGenericTaskFromRisk" />
+        <include refid="selectTicketFromRisk" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryRiskSearchCriteria" />
@@ -505,7 +557,7 @@
         UNION
 
         (
-        <include refid="selectGenericTaskFromBug" />
+        <include refid="selectTicketFromBug" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryBugSearchCriteria" />
@@ -515,7 +567,7 @@
 
         UNION
         (
-        <include refid="selectGenericTaskFromTask" />
+        <include refid="selectTicketFromTask" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryTaskSearchCriteria" />
@@ -524,7 +576,7 @@
         )
         UNION
         (
-        <include refid="selectGenericTaskFromMilestone" />
+        <include refid="selectTicketFromMilestone" />
         #ifnotnull($_parameter.searchCriteria)
           #trimext("WHERE" "AND|OR")
             <include refid="queryMilestoneSearchCriteria" />
@@ -536,13 +588,13 @@
         #end
     </select>
 
-    <select id="getAccountsHasOverdueAssignments" parameterType="ProjectTicketSearchCriteria"
+    <select id="getAccountsHasOverdueAssignments" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
             resultMap="com.mycollab.module.user.dao.BillingAccountMapper.BaseResultMap" lang="velocity">
-        SELECT s_account.id, s_account.subdomain
+        SELECT s_account.id, s_account.subDomain
         FROM s_account
         WHERE
           EXISTS (
-            SELECT * FROM m_tracker_bug AS mainTbl
+            SELECT * FROM m_prj_bug AS mainTbl
               #trimext("WHERE" "AND|OR")
                 <include refid="queryBugSearchCriteria" />
               #end
@@ -572,12 +624,13 @@
         ORDER BY s_account.id ASC
     </select>
 
-    <select id="getProjectsHasOverdueAssignments" parameterType="ProjectTicketSearchCriteria" resultType="Integer" lang="velocity">
+    <select id="getProjectsHasOverdueAssignments" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
+            resultType="Integer" lang="velocity">
         SELECT m_prj_project.id
         FROM m_prj_project
         WHERE
           EXISTS (
-            SELECT * FROM m_tracker_bug AS mainTbl
+            SELECT * FROM m_prj_bug AS mainTbl
             #trimext("WHERE" "AND|OR")
               <include refid="queryBugSearchCriteria" />
             #end
@@ -605,13 +658,13 @@
           )
     </select>
 
-    <select id="getAssigneeSummary" parameterType="ProjectTicketSearchCriteria"
+    <select id="getAssigneeSummary" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
             resultMap="com.mycollab.common.dao.GroupItemMapper.BaseResultMap" lang="velocity">
         SELECT tmpTbl.assignUser AS groupid, COUNT(tmpTbl.assignUser) AS value, tmpTbl.fullname AS groupname,
         tmpTbl.avatarId AS extraValue
           FROM
           ((SELECT mainTbl.assignUser, mainTbl.id AS typeId, 'Project-Task' AS type,
-              concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as fullname,
+              concat(s_user.firstname, ' ', s_user.lastname) as fullname,
               s_user.avatarId AS avatarId
           FROM m_prj_task AS mainTbl
             INNER JOIN m_prj_member ON (mainTbl.assignUser=m_prj_member.username AND m_prj_member.status='Active')
@@ -623,9 +676,9 @@
           #end)
           UNION
           (SELECT mainTbl.assignUser, mainTbl.id AS typeId, 'Project-Bug' AS type,
-              concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as fullname,
+              concat(s_user.firstname, ' ', s_user.lastname) as fullname,
               s_user.avatarId AS avatarId
-          FROM m_tracker_bug AS mainTbl
+          FROM m_prj_bug AS mainTbl
             INNER JOIN m_prj_member ON (mainTbl.assignUser=m_prj_member.username AND m_prj_member.status='Active')
             LEFT OUTER JOIN s_user ON (m_prj_member.username=s_user.username)
           #ifnotnull($_parameter.searchCriteria)
@@ -635,7 +688,7 @@
           #end)
           UNION
           (SELECT mainTbl.assignUser, mainTbl.id AS typeId, 'Project-Risk' AS type,
-              concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as fullname,
+              concat(s_user.firstname, ' ', s_user.lastname) as fullname,
               s_user.avatarId AS avatarId
           FROM m_prj_risk AS mainTbl
             INNER JOIN m_prj_member ON (mainTbl.assignUser=m_prj_member.username AND m_prj_member.status='Active')
@@ -648,7 +701,7 @@
         GROUP BY tmpTbl.assignUser, tmpTbl.fullname, tmpTbl.avatarId
     </select>
 
-    <select id="getPrioritySummary" parameterType="ProjectTicketSearchCriteria"
+    <select id="getPrioritySummary" parameterType="com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria"
             resultMap="com.mycollab.common.dao.GroupItemMapper.BaseResultMap" lang="velocity">
         SELECT tmpTbl.priority AS groupid, COUNT(tmpTbl.priority) AS value, '' AS groupname
         FROM
@@ -661,7 +714,7 @@
           #end)
         UNION
         (SELECT mainTbl.priority, mainTbl.id AS typeId, 'Project-Bug' AS type
-          FROM m_tracker_bug AS mainTbl
+          FROM m_prj_bug AS mainTbl
           #ifnotnull($_parameter.searchCriteria)
             #trimext("WHERE" "AND|OR")
               <include refid="queryBugSearchCriteria"/>
@@ -676,5 +729,36 @@
             #end
           #end)) AS tmpTbl
         GROUP BY tmpTbl.priority
+    </select>
+
+    <select id="findSubTickets" parameterType="map"
+            resultMap="com.mycollab.module.project.dao.ProjectTicketMapper.BaseResultMap" lang="velocity">
+
+        (<include refid="selectTicketFromRisk" />
+        WHERE EXISTS(SELECT *
+            FROM m_prj_ticket_hierarchy
+            WHERE m_prj_ticket_hierarchy.parentType = @{_parameter.parentType}
+                AND m_prj_ticket_hierarchy.parentId = @{_parameter.parentId}
+                AND m_prj_ticket_hierarchy.ticketType = 'Project-Risk'
+                AND m_prj_ticket_hierarchy.ticketId = mainTbl.id)
+        )
+        UNION
+        (<include refid="selectTicketFromBug" />
+        WHERE EXISTS(SELECT *
+            FROM m_prj_ticket_hierarchy
+            WHERE m_prj_ticket_hierarchy.parentType = @{_parameter.parentType}
+                AND m_prj_ticket_hierarchy.parentId = @{_parameter.parentId}
+                AND m_prj_ticket_hierarchy.ticketType = 'Project-Bug'
+                AND m_prj_ticket_hierarchy.ticketId = mainTbl.id)
+        )
+        UNION
+        (<include refid="selectTicketFromTask" />
+        WHERE EXISTS(SELECT *
+            FROM m_prj_ticket_hierarchy
+            WHERE m_prj_ticket_hierarchy.parentType = @{_parameter.parentType}
+                AND m_prj_ticket_hierarchy.parentId = @{_parameter.parentId}
+                AND m_prj_ticket_hierarchy.ticketType = 'Project-Task'
+                AND m_prj_ticket_hierarchy.ticketId = mainTbl.id)
+        )
     </select>
 </mapper>

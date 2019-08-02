@@ -1,23 +1,22 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.milestone;
 
 import com.mycollab.common.i18n.GenericI18Enum;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.module.file.AttachmentUtils;
 import com.mycollab.module.project.ProjectTypeConstants;
 import com.mycollab.module.project.domain.Milestone;
@@ -27,15 +26,16 @@ import com.mycollab.module.project.event.TicketEvent;
 import com.mycollab.module.project.i18n.MilestoneI18nEnum;
 import com.mycollab.module.project.service.MilestoneService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.AdvancedEditBeanForm;
 import com.mycollab.vaadin.web.ui.DefaultDynaFormLayout;
 import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.field.AttachmentUploadField;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.event.ShortcutAction.KeyCode;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.VerticalLayout;
 import org.vaadin.viritin.button.MButton;
@@ -55,17 +55,18 @@ public class MilestoneAddWindow extends MWindow {
         }
         VerticalLayout content = new VerticalLayout();
         withWidth("800px").withModal(true).withResizable(false).withContent(content).withCenter();
-        final AdvancedEditBeanForm<SimpleMilestone> editForm = new AdvancedEditBeanForm<>();
+        AdvancedEditBeanForm<SimpleMilestone> editForm = new AdvancedEditBeanForm<>();
         content.addComponent(editForm);
         editForm.setFormLayoutFactory(new DefaultDynaFormLayout(ProjectTypeConstants.MILESTONE,
-                MilestoneDefaultFormLayoutFactory.getForm(), Milestone.Field.id.name()));
-        final MilestoneEditFormFieldFactory milestoneEditFormFieldFactory = new MilestoneEditFormFieldFactory(editForm);
+                MilestoneDefaultFormLayoutFactory.getAddForm(), Milestone.Field.id.name()));
+        MilestoneEditFormFieldFactory milestoneEditFormFieldFactory = new MilestoneEditFormFieldFactory(editForm);
         editForm.setBeanFormFieldFactory(milestoneEditFormFieldFactory);
         editForm.setBean(milestone);
 
         MButton saveBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_SAVE), clickEvent -> {
             if (editForm.validateForm()) {
                 MilestoneService milestoneService = AppContextUtil.getSpringBean(MilestoneService.class);
+                milestone.setSaccountid(AppUI.getAccountId());
                 Integer milestoneId;
                 if (milestone.getId() == null) {
                     milestoneId = milestoneService.saveWithSession(milestone, UserUIContext.getUsername());
@@ -75,7 +76,7 @@ public class MilestoneAddWindow extends MWindow {
                 }
 
                 AttachmentUploadField uploadField = milestoneEditFormFieldFactory.getAttachmentUploadField();
-                String attachPath = AttachmentUtils.getProjectEntityAttachmentPath(MyCollabUI.getAccountId(), milestone.getProjectid(),
+                String attachPath = AttachmentUtils.getProjectEntityAttachmentPath(AppUI.getAccountId(), milestone.getProjectid(),
                         ProjectTypeConstants.MILESTONE, "" + milestone.getId());
                 uploadField.saveContentsToRepo(attachPath);
 
@@ -84,12 +85,12 @@ public class MilestoneAddWindow extends MWindow {
                         ProjectTypeConstants.MILESTONE, milestoneId));
                 close();
             }
-        }).withIcon(FontAwesome.SAVE).withStyleName(WebThemes.BUTTON_ACTION);
-        saveBtn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
+        }).withIcon(VaadinIcons.CLIPBOARD).withStyleName(WebThemes.BUTTON_ACTION)
+                .withClickShortcut(KeyCode.ENTER);
 
         MButton cancelBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_CANCEL), clickEvent -> close())
                 .withStyleName(WebThemes.BUTTON_OPTION);
-        MHorizontalLayout buttonControls = new MHorizontalLayout(cancelBtn, saveBtn).withMargin(true);
+        MHorizontalLayout buttonControls = new MHorizontalLayout(cancelBtn, saveBtn);
         content.addComponent(buttonControls);
         content.setComponentAlignment(buttonControls, Alignment.MIDDLE_RIGHT);
     }

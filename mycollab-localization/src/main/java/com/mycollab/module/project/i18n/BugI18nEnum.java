@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.i18n;
 
@@ -26,6 +26,7 @@ public enum BugI18nEnum {
     BUTTON_RESOLVED,
     BUTTON_WONT_FIX,
     BUTTON_APPROVE_CLOSE,
+    BUTTON_INPROGRESS,
 
     ERROR_COMMENT_NOT_BLANK_FOR_RESOLUTION,
     ERROR_DUPLICATE_BUG_SELECT,
@@ -47,10 +48,6 @@ public enum BugI18nEnum {
     FORM_ENVIRONMENT,
     FORM_STATUS_HELP,
     FORM_LOG_BY,
-    FORM_COMPONENTS,
-    FORM_COMPONENTS_HELP,
-    FORM_AFFECTED_VERSIONS,
-    FORM_AFFECTED_VERSIONS_HELP,
     FORM_FIXED_VERSIONS,
     FORM_FIXED_VERSIONS_HELP,
     FORM_ORIGINAL_ESTIMATE,
@@ -60,13 +57,11 @@ public enum BugI18nEnum {
     FORM_RESOLVED_DATE,
     FORM_ANY_TEXT,
 
-    OPT_BUG_DEPENDENCIES,
     OPT_APPROVE_BUG,
     OPT_ASSIGN_BUG,
     OPT_REOPEN_BUG,
     OPT_RESOLVE_BUG,
     OPT_EDIT_BUG_NAME,
-    OPT_REMOVE_RELATIONSHIP,
 
     VAL_ALL_BUGS,
     VAL_ALL_OPEN_BUGS,

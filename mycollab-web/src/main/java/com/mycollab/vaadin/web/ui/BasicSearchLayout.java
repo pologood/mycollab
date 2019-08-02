@@ -1,24 +1,25 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
 import com.mycollab.db.arguments.SearchCriteria;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.ComponentContainer;
+import com.mycollab.web.CustomLayoutExt;
+import com.vaadin.ui.*;
+import org.vaadin.viritin.layouts.MHorizontalLayout;
 
 /**
  * @author MyCollab Ltd
@@ -26,34 +27,25 @@ import com.vaadin.ui.ComponentContainer;
  */
 abstract public class BasicSearchLayout<S extends SearchCriteria> extends SearchLayout<S> {
     private static final long serialVersionUID = 1L;
-    protected ComponentContainer header;
+
+    protected MHorizontalLayout header;
     protected ComponentContainer body;
 
     public BasicSearchLayout(DefaultGenericSearchPanel<S> parent) {
-        super(parent, "basicSearch");
-        this.initLayout();
-    }
-
-    private void initLayout() {
+        super(parent);
+        CustomLayout layout = CustomLayoutExt.createLayout("basicSearch");
         header = this.constructHeader();
         body = this.constructBody();
         if (header != null) {
-            this.addComponent(header, "basicSearchHeader");
+            layout.addComponent(header, "basicSearchHeader");
         }
 
-        this.addComponent(body, "basicSearchBody");
+        layout.addComponent(body, "basicSearchBody");
+        this.setCompositionRoot(layout);
     }
 
-    @Override
-    protected void addHeaderRight(Component c) {
-        if (header == null)
-            return;
-
-        header.addComponent(c);
-    }
-
-    private ComponentContainer constructHeader() {
-        return ((DefaultGenericSearchPanel)searchPanel).constructHeader();
+    private MHorizontalLayout constructHeader() {
+        return searchPanel.getHeader();
     }
 
     abstract public ComponentContainer constructBody();

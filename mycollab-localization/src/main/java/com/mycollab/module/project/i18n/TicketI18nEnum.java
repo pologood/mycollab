@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
- *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.i18n;
 
@@ -45,4 +45,14 @@ public enum TicketI18nEnum {
     VAL_UPDATE_THIS_WEEK,
     VAL_NEW_LAST_WEEK,
     VAL_UPDATE_LAST_WEEK,
+
+    FORM_AFFECTED_VERSIONS,
+    FORM_COMPONENTS_HELP,
+    FORM_COMPONENTS,
+    FORM_AFFECTED_VERSIONS_HELP,
+    FORM_SUB_TICKETS,
+    FORM_SUB_TICKETS_HELP,
+
+    OPT_REMOVE_RELATIONSHIP,
+    OPT_DEPENDENCIES
 }

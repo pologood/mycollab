@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-core.
+ * Copyright © MyCollab
  *
- * mycollab-core is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-core is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-core.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.core.utils;
 
@@ -27,23 +27,23 @@ public class ColorUtils {
         return brighterColor(hexValue, 0.1);
     }
 
-    public static final String brighterColor(String hexValue, double fraction) {
+    public static String brighterColor(String hexValue, double fraction) {
         Color color = Color.decode(hexValue);
         Color brighter = lighter(color, fraction);
         return toHexString(brighter);
     }
 
-    public static final String darkerColor(String hexValue) {
+    public static String darkerColor(String hexValue) {
         return darkerColor(hexValue, 0.1);
     }
 
-    public static final String darkerColor(String hexValue, double fraction) {
+    public static String darkerColor(String hexValue, double fraction) {
         Color color = Color.decode(hexValue);
         Color brighter = darker(color, fraction);
         return toHexString(brighter);
     }
 
-    public final static String toHexString(Color colour) throws NullPointerException {
+    public static String toHexString(Color colour) throws NullPointerException {
         String hexColour = Integer.toHexString(colour.getRGB() & 0xffffff);
         if (hexColour.length() < 6) {
             hexColour = "000000".substring(0, 6 - hexColour.length()) + hexColour;

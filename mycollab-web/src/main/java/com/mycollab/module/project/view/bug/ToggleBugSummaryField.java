@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.bug;
 
@@ -23,45 +23,44 @@ import com.mycollab.core.utils.BeanUtility;
 import com.mycollab.core.utils.StringUtils;
 import com.mycollab.html.DivLessFormatter;
 import com.mycollab.module.project.CurrentProjectVariables;
-import com.mycollab.module.project.ProjectLinkBuilder;
+import com.mycollab.module.project.ProjectLinkGenerator;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.ProjectTypeConstants;
+import com.mycollab.module.project.domain.SimpleBug;
 import com.mycollab.module.project.i18n.BugI18nEnum;
 import com.mycollab.module.project.i18n.ProjectCommonI18nEnum;
-import com.mycollab.module.tracker.domain.BugWithBLOBs;
-import com.mycollab.module.tracker.domain.SimpleBug;
-import com.mycollab.module.tracker.service.BugService;
+import com.mycollab.module.project.service.BugService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.TooltipHelper;
+import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ELabel;
-import com.mycollab.vaadin.ui.UIConstants;
 import com.mycollab.vaadin.web.ui.AbstractToggleSummaryField;
-import com.vaadin.server.FontAwesome;
+import com.mycollab.vaadin.web.ui.WebThemes;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 
-import static com.mycollab.vaadin.TooltipHelper.TOOLTIP_ID;
-
 /**
  * @author MyCollab Ltd
  * @since 5.2.3
  */
-public class ToggleBugSummaryField extends AbstractToggleSummaryField {
+class ToggleBugSummaryField extends AbstractToggleSummaryField {
     private boolean isRead = true;
-    private BugWithBLOBs bug;
+    private SimpleBug bug;
     private int maxLength;
 
-    public ToggleBugSummaryField(final BugWithBLOBs bug) {
+    ToggleBugSummaryField(SimpleBug bug) {
         this(bug, Integer.MAX_VALUE);
     }
 
-    public ToggleBugSummaryField(final BugWithBLOBs bug, int trimCharacters) {
+    ToggleBugSummaryField(SimpleBug bug, int trimCharacters) {
         this.bug = bug;
         this.maxLength = trimCharacters;
-        titleLinkLbl = ELabel.html(buildBugLink()).withStyleName(UIConstants.LABEL_WORD_WRAP).withWidthUndefined();
+        titleLinkLbl = ELabel.html(buildBugLink()).withStyleName(WebThemes.LABEL_WORD_WRAP).withUndefinedWidth();
         this.addComponent(titleLinkLbl);
         buttonControls = new MHorizontalLayout().withStyleName("toggle").withSpacing(false);
         if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.BUGS)) {
@@ -70,18 +69,23 @@ public class ToggleBugSummaryField extends AbstractToggleSummaryField {
                 if (isRead) {
                     ToggleBugSummaryField.this.removeComponent(titleLinkLbl);
                     ToggleBugSummaryField.this.removeComponent(buttonControls);
-                    final TextField editField = new TextField();
+                    TextField editField = new TextField();
                     editField.setValue(bug.getName());
                     editField.setWidth("100%");
                     editField.focus();
                     ToggleBugSummaryField.this.addComponent(editField);
                     ToggleBugSummaryField.this.removeStyleName("editable-field");
-                    editField.addValueChangeListener(valueChangeEvent -> updateFieldValue(editField));
+                    editField.addShortcutListener(new ShortcutListener("enter", ShortcutAction.KeyCode.ENTER, (int[]) null) {
+                        @Override
+                        public void handleAction(Object sender, Object target) {
+                            updateFieldValue(editField);
+                        }
+                    });
                     editField.addBlurListener(blurEvent -> updateFieldValue(editField));
                     isRead = !isRead;
                 }
             }).withDescription(UserUIContext.getMessage(BugI18nEnum.OPT_EDIT_BUG_NAME))
-                    .withIcon(FontAwesome.EDIT).withStyleName(ValoTheme.BUTTON_ICON_ONLY, ValoTheme.BUTTON_ICON_ALIGN_TOP);
+                    .withIcon(VaadinIcons.EDIT).withStyleName(ValoTheme.BUTTON_ICON_ONLY, ValoTheme.BUTTON_ICON_ALIGN_TOP);
             buttonControls.with(instantEditBtn);
             this.addComponent(buttonControls);
         }
@@ -105,12 +109,13 @@ public class ToggleBugSummaryField extends AbstractToggleSummaryField {
 
     private String buildBugLink() {
         String linkName = StringUtils.trim(bug.getName(), maxLength, true);
-        A bugLink = new A().setId("tag" + TOOLTIP_ID).setHref(ProjectLinkBuilder.generateBugPreviewFullLink(bug.getBugkey(),
-                CurrentProjectVariables.getShortName())).appendText(linkName).setStyle("display:inline");
+        A bugLink = new A().setId("tag" + TooltipHelper.TOOLTIP_ID).
+                setHref(ProjectLinkGenerator.generateBugPreviewLink(CurrentProjectVariables.getShortName(),
+                        bug.getTicketKey())).appendText(linkName).setStyle("display:inline");
         Div resultDiv = new DivLessFormatter().appendChild(bugLink);
         if (SimpleBug.isOverdue(bug)) {
             bugLink.setCSSClass("overdue");
-            resultDiv.appendChild(new Span().setCSSClass(UIConstants.META_INFO)
+            resultDiv.appendChild(new Span().setCSSClass(WebThemes.META_INFO)
                     .appendText(" - " + UserUIContext.getMessage(ProjectCommonI18nEnum.OPT_DUE_IN, UserUIContext.formatDuration(bug.getDuedate()))));
         } else if (SimpleBug.isCompleted(bug)) {
             bugLink.setCSSClass("completed");

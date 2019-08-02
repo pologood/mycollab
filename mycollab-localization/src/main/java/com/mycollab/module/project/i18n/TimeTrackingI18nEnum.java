@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.i18n;
 
@@ -30,7 +30,6 @@ public enum TimeTrackingI18nEnum {
 
     DIALOG_LOG_TIME_ENTRY_TITLE,
 
-    TASK_LIST_RANGE,
     TASK_LIST_RANGE_WITH_TOTAL_HOUR,
     SEARCH_TIME_TITLE,
 
@@ -40,6 +39,7 @@ public enum TimeTrackingI18nEnum {
     FORM_SUMMARY,
     FORM_IS_BILLABLE,
     FORM_IS_OVERTIME,
+    FORM_IS_APPROVED,
     FORM_WEEK,
     FORM_WHO,
 

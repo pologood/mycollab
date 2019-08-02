@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web-community.
- *
- * mycollab-web-community is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web-community is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web-community.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.community.module.project.view.service;
 
@@ -23,36 +23,38 @@ import com.mycollab.common.i18n.FollowerI18nEnum;
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.common.i18n.ShellI18nEnum;
 import com.mycollab.community.vaadin.web.ui.field.MetaFieldBuilder;
-import com.mycollab.configuration.StorageFactory;
-import com.mycollab.core.SecureAccessException;
 import com.mycollab.core.utils.NumberUtils;
-import com.mycollab.module.project.CurrentProjectVariables;
+import com.mycollab.form.view.LayoutType;
+import com.mycollab.module.file.StorageUtils;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.ProjectTypeConstants;
-import com.mycollab.module.project.domain.ProjectTicket;
-import com.mycollab.module.project.domain.SimpleTask;
+import com.mycollab.module.project.domain.*;
 import com.mycollab.module.project.i18n.*;
+import com.mycollab.module.project.i18n.OptionI18nEnum.Priority;
+import com.mycollab.module.project.service.ProjectMemberService;
 import com.mycollab.module.project.ui.ProjectAssetsManager;
+import com.mycollab.module.project.ui.components.UserProjectComboBox;
 import com.mycollab.module.project.view.bug.BugEditForm;
 import com.mycollab.module.project.view.service.TicketComponentFactory;
 import com.mycollab.module.project.view.task.TaskEditForm;
-import com.mycollab.module.tracker.domain.SimpleBug;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.spring.AppContextUtil;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.ui.UIConstants;
+import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.grid.GridFormLayoutHelper;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.CssLayout;
-import org.apache.commons.collections.CollectionUtils;
+import com.vaadin.ui.IconGenerator;
 import org.springframework.stereotype.Service;
-import org.vaadin.teemu.VaadinIcons;
+import org.vaadin.viritin.layouts.MCssLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author MyCollab Ltd
@@ -97,13 +99,13 @@ public class TicketComponentFactoryImpl implements TicketComponentFactory {
     public AbstractComponent createDueDatePopupField(ProjectTicket assignment) {
         if (assignment.getDueDatePlusOne() == null) {
             Div divHint = new Div().setCSSClass("nonValue");
-            divHint.appendText(FontAwesome.CLOCK_O.getHtml());
+            divHint.appendText(VaadinIcons.CLOCK.getHtml());
             divHint.appendChild(new Span().appendText(UserUIContext.getMessage(GenericI18Enum.OPT_UNDEFINED)).setCSSClass("hide"));
             return new MetaFieldBuilder().withCaption(divHint.write())
                     .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                             UserUIContext.getMessage(GenericI18Enum.FORM_DUE_DATE))).build();
         } else {
-            return new MetaFieldBuilder().withCaption(String.format(" %s %s", FontAwesome.CLOCK_O.getHtml(),
+            return new MetaFieldBuilder().withCaption(String.format(" %s %s", VaadinIcons.CLOCK.getHtml(),
                     UserUIContext.formatPrettyTime(assignment.getDueDatePlusOne())))
                     .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                             UserUIContext.getMessage(GenericI18Enum.FORM_DUE_DATE))).build();
@@ -111,48 +113,48 @@ public class TicketComponentFactoryImpl implements TicketComponentFactory {
     }
 
     @Override
-    public AbstractComponent createPriorityPopupField(ProjectTicket assignment) {
-        return new MetaFieldBuilder().withCaption(ProjectAssetsManager.getPriorityHtml(assignment.getPriority()) + " " +
-                UserUIContext.getMessage(OptionI18nEnum.Priority.class, assignment.getPriority()))
+    public AbstractComponent createPriorityPopupField(ProjectTicket ticket) {
+        return new MetaFieldBuilder().withCaption(ProjectAssetsManager.getPriorityHtml(ticket.getPriority()) + " " +
+                UserUIContext.getMessage(Priority.class, ticket.getPriority()))
                 .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                         UserUIContext.getMessage(GenericI18Enum.FORM_PRIORITY))).build();
     }
 
     @Override
-    public AbstractComponent createBillableHoursPopupField(ProjectTicket task) {
+    public AbstractComponent createBillableHoursPopupField(ProjectTicket ticket) {
         return null;
     }
 
     @Override
-    public AbstractComponent createNonBillableHoursPopupField(ProjectTicket task) {
+    public AbstractComponent createNonBillableHoursPopupField(ProjectTicket ticket) {
         return null;
     }
 
     @Override
-    public AbstractComponent createFollowersPopupField(ProjectTicket assignment) {
-        return new MetaFieldBuilder().withCaptionAndIcon(FontAwesome.EYE, "" + NumberUtils.zeroIfNull(assignment.getNumFollowers()))
+    public AbstractComponent createFollowersPopupField(ProjectTicket ticket) {
+        return new MetaFieldBuilder().withCaptionAndIcon(VaadinIcons.EYE, "" + NumberUtils.zeroIfNull(ticket.getNumFollowers()))
                 .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                         UserUIContext.getMessage(FollowerI18nEnum.OPT_SUB_INFO_WATCHERS))).build();
     }
 
     @Override
     public AbstractComponent createCommentsPopupField(ProjectTicket assignment) {
-        return new MetaFieldBuilder().withCaption(FontAwesome.COMMENT_O.getHtml() + " " + NumberUtils.zeroIfNull(assignment.getNumComments()))
+        return new MetaFieldBuilder().withCaption(VaadinIcons.COMMENT_O.getHtml() + " " + NumberUtils.zeroIfNull(assignment.getNumComments()))
                 .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                         UserUIContext.getMessage(GenericI18Enum.OPT_COMMENTS))).build();
     }
 
     @Override
     public AbstractComponent createStatusPopupField(ProjectTicket assignment) {
-        return new MetaFieldBuilder().withCaptionAndIcon(FontAwesome.INFO_CIRCLE, assignment.getStatus()).withDescription
+        return new MetaFieldBuilder().withCaptionAndIcon(VaadinIcons.INFO_CIRCLE, assignment.getStatus()).withDescription
                 (UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
                         UserUIContext.getMessage(GenericI18Enum.FORM_STATUS))).build();
     }
 
     @Override
     public AbstractComponent createAssigneePopupField(ProjectTicket ticket) {
-        String avatarLink = StorageFactory.getAvatarPath(ticket.getAssignUserAvatarId(), 16);
-        Img img = new Img(ticket.getAssignUserFullName(), avatarLink).setCSSClass(UIConstants.CIRCLE_BOX)
+        String avatarLink = StorageUtils.getAvatarPath(ticket.getAssignUserAvatarId(), 16);
+        Img img = new Img(ticket.getAssignUserFullName(), avatarLink).setCSSClass(WebThemes.CIRCLE_BOX)
                 .setTitle(ticket.getAssignUserFullName());
         return new MetaFieldBuilder().withCaption(img.write())
                 .withDescription(UserUIContext.getMessage(ShellI18nEnum.OPT_UPGRADE_PRO_INTRO,
@@ -160,63 +162,105 @@ public class TicketComponentFactoryImpl implements TicketComponentFactory {
     }
 
     @Override
-    public MWindow createNewTicketWindow(Date date, Integer prjId, Integer milestoneId, boolean isIncludeMilestone) {
+    public MWindow createNewTicketWindow(LocalDate date, Integer prjId, Integer milestoneId, boolean isIncludeMilestone, Map<String, ?> arguments) {
         return new NewTicketWindow(date, prjId, milestoneId, isIncludeMilestone);
     }
 
     private static class NewTicketWindow extends MWindow {
+        private ComboBox<String> typeSelection;
+        private MCssLayout formLayout;
+        private boolean isIncludeMilestone;
+        private SimpleProject selectedProject;
 
-        private ComboBox typeSelection;
-        private CssLayout formLayout;
-
-        NewTicketWindow(Date date, final Integer prjId, final Integer milestoneId, boolean isIncludeMilestone) {
+        NewTicketWindow(LocalDate date, Integer projectId, Integer milestoneId, boolean isIncludeMilestone) {
             super(UserUIContext.getMessage(TicketI18nEnum.NEW));
+            this.isIncludeMilestone = isIncludeMilestone;
+            this.addStyleName(WebThemes.NO_SCROLLABLE_CONTAINER);
             MVerticalLayout content = new MVerticalLayout();
-            withModal(true).withResizable(false).withCenter().withWidth("1200px").withContent(content);
+            withModal(true).withResizable(false).withCenter().withWidth(WebThemes.WINDOW_FORM_WIDTH).withContent(content);
 
-            typeSelection = new ComboBox();
-            typeSelection.setItemCaptionMode(AbstractSelect.ItemCaptionMode.EXPLICIT_DEFAULTS_ID);
-            if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.TASKS)) {
-                typeSelection.addItem(UserUIContext.getMessage(TaskI18nEnum.SINGLE));
-                typeSelection.setItemIcon(UserUIContext.getMessage(TaskI18nEnum.SINGLE), ProjectAssetsManager.getAsset(ProjectTypeConstants.TASK));
-            }
+            UserProjectComboBox projectListSelect = new UserProjectComboBox();
+            projectListSelect.setEmptySelectionAllowed(false);
+            selectedProject = projectListSelect.setSelectedProjectById(projectId);
 
-            if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.BUGS)) {
-                typeSelection.addItem(UserUIContext.getMessage(BugI18nEnum.SINGLE));
-                typeSelection.setItemIcon(UserUIContext.getMessage(BugI18nEnum.SINGLE), ProjectAssetsManager.getAsset(ProjectTypeConstants.BUG));
-            }
+            typeSelection = new ComboBox<>();
+            typeSelection.setWidth(WebThemes.FORM_CONTROL_WIDTH);
+            typeSelection.setEmptySelectionAllowed(false);
 
-            if (isIncludeMilestone && CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.MILESTONES)) {
-                typeSelection.addItem(UserUIContext.getMessage(MilestoneI18nEnum.SINGLE));
-                typeSelection.setItemIcon(UserUIContext.getMessage(MilestoneI18nEnum.SINGLE), ProjectAssetsManager.getAsset(ProjectTypeConstants.MILESTONE));
-            }
+            projectListSelect.addValueChangeListener(valueChangeEvent -> {
+                selectedProject = projectListSelect.getValue();
+                loadAssociateTicketTypePerProject();
+            });
 
-            typeSelection.setNullSelectionAllowed(false);
-            if (CollectionUtils.isNotEmpty(typeSelection.getItemIds())) {
-                typeSelection.select(typeSelection.getItemIds().iterator().next());
-            } else {
-                throw new SecureAccessException();
-            }
+            loadAssociateTicketTypePerProject();
+            typeSelection.addValueChangeListener(event -> doChange(date, milestoneId));
 
-            typeSelection.setNullSelectionAllowed(false);
-            typeSelection.addValueChangeListener(valueChangeEvent -> doChange(date, prjId, milestoneId));
+            GridFormLayoutHelper formLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(LayoutType.TWO_COLUMN);
+            formLayoutHelper.addComponent(projectListSelect, UserUIContext.getMessage(ProjectI18nEnum.SINGLE), 0, 0);
+            formLayoutHelper.addComponent(typeSelection, UserUIContext.getMessage(GenericI18Enum.FORM_TYPE), 1, 0);
+            formLayoutHelper.getLayout().addStyleName(WebThemes.BORDER_BOTTOM);
 
-            GridFormLayoutHelper formLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(1, 1);
-            formLayoutHelper.addComponent(typeSelection, UserUIContext.getMessage(GenericI18Enum.FORM_TYPE), 0, 0);
-            formLayout = new CssLayout();
-            formLayout.setWidth("100%");
+            formLayout = new MCssLayout().withFullWidth();
             content.with(formLayoutHelper.getLayout(), formLayout);
-            doChange(date, prjId, milestoneId);
+            doChange(date, milestoneId);
         }
 
-        private void doChange(Date dateValue, final Integer prjId, final Integer milestoneId) {
+        private void loadAssociateTicketTypePerProject() {
+            typeSelection.clear();
+            List<String> ticketTypes = new ArrayList<>();
+
+            if (UserUIContext.isAdmin()) {
+                if (isIncludeMilestone) {
+                    ticketTypes.add(UserUIContext.getMessage(MilestoneI18nEnum.SINGLE));
+                }
+                ticketTypes.add(UserUIContext.getMessage(TaskI18nEnum.SINGLE));
+                ticketTypes.add(UserUIContext.getMessage(BugI18nEnum.SINGLE));
+
+            } else {
+                ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
+                SimpleProjectMember member = projectMemberService.findMemberByUsername(UserUIContext.getUsername(), selectedProject.getId(), AppUI.getAccountId());
+
+                if (member != null) {
+                    if (isIncludeMilestone && (member.canWrite(ProjectRolePermissionCollections.MILESTONES))) {
+                        ticketTypes.add(UserUIContext.getMessage(MilestoneI18nEnum.SINGLE));
+                    }
+
+                    if (member.canWrite(ProjectRolePermissionCollections.TASKS)) {
+                        ticketTypes.add(UserUIContext.getMessage(TaskI18nEnum.SINGLE));
+                    }
+
+                    if (member.canWrite(ProjectRolePermissionCollections.BUGS)) {
+                        ticketTypes.add(UserUIContext.getMessage(BugI18nEnum.SINGLE));
+                    }
+                }
+            }
+
+
+            if (ticketTypes.size() > 0) {
+                typeSelection.setItems(ticketTypes);
+                typeSelection.setValue(ticketTypes.get(0));
+                typeSelection.setItemIconGenerator((IconGenerator<String>) item -> {
+                    if (item.equals(UserUIContext.getMessage(TaskI18nEnum.SINGLE))) {
+                        return ProjectAssetsManager.getAsset(ProjectTypeConstants.TASK);
+                    } else if (item.equals(UserUIContext.getMessage(BugI18nEnum.SINGLE))) {
+                        return ProjectAssetsManager.getAsset(ProjectTypeConstants.BUG);
+                    } else if (item.equals(UserUIContext.getMessage(MilestoneI18nEnum.SINGLE))) {
+                        return ProjectAssetsManager.getAsset(ProjectTypeConstants.MILESTONE);
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                });
+            }
+        }
+
+        private void doChange(LocalDate dateValue, Integer milestoneId) {
             formLayout.removeAllComponents();
-            String value = (String) typeSelection.getValue();
+            String value = typeSelection.getValue();
             if (UserUIContext.getMessage(TaskI18nEnum.SINGLE).equals(value)) {
                 SimpleTask task = new SimpleTask();
-                task.setProjectid(prjId);
+                task.setProjectid(selectedProject.getId());
                 task.setMilestoneid(milestoneId);
-                task.setSaccountid(MyCollabUI.getAccountId());
+                task.setSaccountid(AppUI.getAccountId());
                 task.setCreateduser(UserUIContext.getUsername());
                 task.setStartdate(dateValue);
                 TaskEditForm editForm = new TaskEditForm() {
@@ -229,8 +273,8 @@ public class TicketComponentFactoryImpl implements TicketComponentFactory {
                 formLayout.addComponent(editForm);
             } else if (UserUIContext.getMessage(BugI18nEnum.SINGLE).equals(value)) {
                 SimpleBug bug = new SimpleBug();
-                bug.setProjectid(prjId);
-                bug.setSaccountid(MyCollabUI.getAccountId());
+                bug.setProjectid(selectedProject.getId());
+                bug.setSaccountid(AppUI.getAccountId());
                 bug.setStartdate(dateValue);
                 bug.setMilestoneid(milestoneId);
                 bug.setCreateduser(UserUIContext.getUsername());

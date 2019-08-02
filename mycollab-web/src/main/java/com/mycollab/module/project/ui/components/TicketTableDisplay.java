@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.ui.components;
 
@@ -36,8 +36,6 @@ import org.vaadin.viritin.button.MButton;
 
 import java.util.List;
 
-import static com.mycollab.vaadin.TooltipHelper.TOOLTIP_ID;
-
 /**
  * @author MyCollab Ltd.
  * @since 1.0
@@ -49,27 +47,27 @@ public class TicketTableDisplay extends DefaultPagedBeanTable<ProjectTicketServi
         super(AppContextUtil.getSpringBean(ProjectTicketService.class), ProjectTicket.class, displayColumns);
 
         addGeneratedColumn("name", (source, itemId, columnId) -> {
-            final ProjectTicket task = getBeanByIndex(itemId);
+            ProjectTicket ticket = getBeanByIndex(itemId);
 
             Div div = new DivLessFormatter();
-            Text image = new Text(ProjectAssetsManager.getAsset(task.getType()).getHtml());
-            A itemLink = new A().setId("tag" + TOOLTIP_ID);
-            if (ProjectTypeConstants.TASK.equals(task.getType()) || ProjectTypeConstants.BUG.equals(task.getType())) {
-                itemLink.setHref(ProjectLinkGenerator.generateProjectItemLink(task.getProjectShortName(),
-                        task.getProjectId(), task.getType(), task.getExtraTypeId() + ""));
+            Text image = new Text(ProjectAssetsManager.getAsset(ticket.getType()).getHtml());
+            A itemLink = new A().setId("tag" + TooltipHelper.TOOLTIP_ID);
+            if (ProjectTypeConstants.TASK.equals(ticket.getType()) || ProjectTypeConstants.BUG.equals(ticket.getType()) || ProjectTypeConstants.RISK.equals(ticket.getType())) {
+                itemLink.setHref(ProjectLinkGenerator.generateProjectItemLink(ticket.getProjectShortName(),
+                        ticket.getProjectId(), ticket.getType(), ticket.getExtraTypeId() + ""));
             } else {
-                itemLink.setHref(ProjectLinkGenerator.generateProjectItemLink(task.getProjectShortName(),
-                        task.getProjectId(), task.getType(), task.getTypeId() + ""));
+                itemLink.setHref(ProjectLinkGenerator.generateProjectItemLink(ticket.getProjectShortName(),
+                        ticket.getProjectId(), ticket.getType(), ticket.getTypeId() + ""));
             }
 
-            itemLink.setAttribute("onmouseover", TooltipHelper.projectHoverJsFunction(task.getType(), task.getTypeId() + ""));
+            itemLink.setAttribute("onmouseover", TooltipHelper.projectHoverJsFunction(ticket.getType(), ticket.getTypeId() + ""));
             itemLink.setAttribute("onmouseleave", TooltipHelper.itemMouseLeaveJsFunction());
-            itemLink.appendText(task.getName());
+            itemLink.appendText(ProjectAssetsManager.getAsset(ticket.getType()).getHtml() + " " + ticket.getName());
 
-            div.appendChild(image, DivLessFormatter.EMPTY_SPACE(), itemLink);
+            div.appendChild(image, DivLessFormatter.EMPTY_SPACE, itemLink);
 
             MButton assignmentLink = new MButton(div.write(),
-                    clickEvent -> fireTableEvent(new TableClickEvent(TicketTableDisplay.this, task, "name")))
+                    clickEvent -> fireTableEvent(new TableClickEvent(TicketTableDisplay.this, ticket, "name")))
                     .withStyleName(WebThemes.BUTTON_LINK);
             assignmentLink.setCaptionAsHtml(true);
             return assignmentLink;

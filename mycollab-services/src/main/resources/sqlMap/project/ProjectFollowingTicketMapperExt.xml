@@ -11,7 +11,7 @@
 		<result column="name" jdbcType="VARCHAR" property="name" />
 		<result column="type" jdbcType="VARCHAR" property="type" />
 		<result column="typeId" jdbcType="INTEGER" property="typeId" />
-		<result column="monitorDate" jdbcType="TIMESTAMP" property="monitorDate" />
+		<result column="createdTime" jdbcType="TIMESTAMP" property="createdTime" />
 		<result column="status" jdbcType="VARCHAR" property="status" />
 		<result column="dueDate" jdbcType="TIMESTAMP" property="dueDate" />
 	</resultMap>
@@ -27,7 +27,7 @@
 	<sql id="extraQueryBugSearchCriteria">
         <![CDATA[
         #ifnotnull($searchCriteria.name)
-            ${searchCriteria.name.operation} m_tracker_bug.name LIKE '%${searchCriteria.name.value}%'
+            ${searchCriteria.name.operation} m_prj_bug.name LIKE '%${searchCriteria.name.value}%'
         #end
         ]]>
 	</sql>
@@ -44,8 +44,8 @@
         <![CDATA[
         SELECT 'Project-Task' as type, m_prj_project.id AS projectId, m_prj_project.name AS projectName,
             m_prj_task.name AS name, m_prj_task.assignUser AS assignUser,
-            concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as assignUserFullName,
-            s_user.avatarId AS assignUserAvatarId, m_monitor_item.monitor_date AS monitorDate,
+            concat(s_user.firstname, ' ', s_user.lastname) as assignUserFullName,
+            s_user.avatarId AS assignUserAvatarId, m_monitor_item.createdTime AS createdTime,
             m_prj_task.id AS typeId, m_prj_task.dueDate, m_prj_task.status
                
         FROM m_monitor_item
@@ -58,15 +58,15 @@
 	<sql id="selectFollowingTicketOfBug">
         <![CDATA[
         SELECT 'Project-Bug' as type, m_prj_project.id AS projectId, m_prj_project.name AS projectName,
-            m_tracker_bug.name AS name, s_user.username AS assignUser,
-            concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as assignUserFullName,
-            s_user.avatarId AS assignUserAvatarId, m_monitor_item.monitor_date AS monitorDate,
-            m_tracker_bug.id AS typeId, m_tracker_bug.dueDate, m_tracker_bug.status
+            m_prj_bug.name AS name, s_user.username AS assignUser,
+            concat(s_user.firstname, ' ', s_user.lastname) as assignUserFullName,
+            s_user.avatarId AS assignUserAvatarId, m_monitor_item.createdTime AS createdTime,
+            m_prj_bug.id AS typeId, m_prj_bug.dueDate, m_prj_bug.status
                
         FROM m_monitor_item
-            INNER JOIN m_tracker_bug ON (m_monitor_item.type='Project-Bug' AND m_monitor_item.typeId=m_tracker_bug.id)
+            INNER JOIN m_prj_bug ON (m_monitor_item.type='Project-Bug' AND m_monitor_item.typeId=m_prj_bug.id)
             INNER JOIN m_prj_project ON (m_prj_project.id=m_monitor_item.extraTypeId)
-            LEFT OUTER JOIN s_user ON (s_user.username=m_tracker_bug.assignUser)
+            LEFT OUTER JOIN s_user ON (s_user.username=m_prj_bug.assignUser)
         ]]>
 	</sql>
 
@@ -74,8 +74,8 @@
         <![CDATA[
         SELECT 'Project-Risk' as type, m_prj_project.id AS projectId, m_prj_project.name AS projectName,
             m_prj_risk.name AS name, s_user.username AS assignUser,
-            concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) as assignUserFullName,
-            s_user.avatarId AS assignUserAvatarId, m_monitor_item.monitor_date AS monitorDate,
+            concat(s_user.firstname, ' ', s_user.lastname) as assignUserFullName,
+            s_user.avatarId AS assignUserAvatarId, m_monitor_item.createdTime AS createdTime,
             m_prj_risk.id AS typeId, m_prj_risk.dueDate, m_prj_risk.status
                
         FROM m_monitor_item
@@ -92,10 +92,10 @@
 		        ${orderField.field} ${orderField.direction},
 		    #end
 		#end
-		monitorDate DESC
+		createdTime DESC
 	</sql>
 
-	<select id="findPageableListByCriteria" parameterType="FollowingTicketSearchCriteria" resultMap="FollowingTicketResult" lang="velocity">
+	<select id="findPageableListByCriteria" parameterType="com.mycollab.module.project.domain.criteria.FollowingTicketSearchCriteria" resultMap="FollowingTicketResult" lang="velocity">
 		(
 		<include refid="selectFollowingTicketOfTask" />
 		#ifnotnull($_parameter.searchCriteria)
@@ -128,7 +128,7 @@
 		<include refid="orderStatement" />
 	</select>
 
-	<select id="getTotalCount" resultType="int" parameterType="MonitorSearchCriteria"
+	<select id="getTotalCount" resultType="int" parameterType="com.mycollab.common.domain.criteria.MonitorSearchCriteria"
 		lang="velocity">
 		SELECT count(*) FROM
 		(

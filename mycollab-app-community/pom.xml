@@ -7,20 +7,22 @@
     <parent>
         <groupId>com.mycollab</groupId>
         <artifactId>mycollab-parent-community</artifactId>
-        <version>5.4.8</version>
+        <version>7.0.3</version>
         <relativePath>../mycollab-parent-community/pom.xml</relativePath>
     </parent>
     <packaging>jar</packaging>
     <properties>
+        <dockerfile-maven-plugin.version>1.4.10</dockerfile-maven-plugin.version>
         <installer.staging.dir>${project.build.directory}/staging</installer.staging.dir>
         <installer.resource.dir.app>${basedir}/src/main/installer-resources</installer.resource.dir.app>
         <staging.dir.app>${installer.staging.dir}</staging.dir.app>
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.mycollab</groupId>
-            <artifactId>mycollab-client-api</artifactId>
+            <artifactId>mycollab-migration</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -56,71 +58,123 @@
 
         <dependency>
             <groupId>com.mycollab</groupId>
-            <artifactId>mycollab-mobile</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.mycollab</groupId>
             <artifactId>mycollab-web-community</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jettyVersion}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.vaadin.addons</groupId>
-            <artifactId>loginform</artifactId>
-            <version>0.6.1</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-client-compiler</artifactId>
-            <version>${vaadinVersion}</version>
+            <artifactId>vaadin-compatibility-client</artifactId>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.vaadin</groupId>
-                    <artifactId>vaadin-sass-compiler</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.vaadin.external.flute</groupId>
-                    <artifactId>flute</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.vaadin.external.streamhtmlparser</groupId>
-                    <artifactId>streamhtmlparser-jsilver</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.vaadin.external.google</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.w3c.css</groupId>
-                    <artifactId>sac</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.sourceforge.cssparser</groupId>
-                    <artifactId>cssparser</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xml-apis</groupId>
-                    <artifactId>xml-apis</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
+
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>Vaadin</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.vaadin</groupId>
+                        <artifactId>vaadin-maven-plugin</artifactId>
+                        <version>${vaadin.version}</version>
+                        <configuration>
+                            <webappDirectory>src/main/resources/VAADIN/widgetsets/</webappDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>update-theme</goal>
+                                    <goal>update-widgetset</goal>
+                                    <goal>compile</goal>
+                                    <!-- Comment out compile-theme goal to use on-the-fly theme compilation -->
+                                    <goal>compile-theme</goal>
+                                </goals>
+                                <phase>compile</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.0.0</version>
+                <!-- Clean up also any pre-compiled themes -->
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>src/main/webapp/VAADIN/themes</directory>
+                            <includes>
+                                <include>**/styles.css</include>
+                                <include>**/styles.scss.cache</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/classes</outputDirectory>
+                            <useDefaultDelimiters>false</useDefaultDelimiters>
+                            <delimiters>
+                                <delimiter>#</delimiter>
+                            </delimiters>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources/</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>config/*.yml</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>src/main/resources/</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>
+                                        <exclude>config/*.yml</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>docker-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/docker/</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>
+                                        <exclude>**/*.yml</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -231,9 +285,9 @@
                                 <copy todir="${installer.staging.dir}">
                                     <fileset dir="${installer.resource.dir.app}"/>
                                 </copy>
-                                <copy todir="${installer.staging.dir}/conf">
-                                    <fileset dir="${basedir}/src/main/conf">
-                                        <exclude name="mycollab.properties"/>
+                                <copy todir="${installer.staging.dir}/config">
+                                    <fileset dir="${basedir}/src/main/config">
+                                        <exclude name="application.properties"/>
                                     </fileset>
                                 </copy>
                                 <copy todir="${installer.staging.dir}/logs">
@@ -242,12 +296,12 @@
                                 <copy todir="${installer.staging.dir}/bin">
                                     <fileset dir="${basedir}/src/main/scripts"/>
                                 </copy>
-                                <copy todir="${installer.staging.dir}/webapp">
-                                    <fileset dir="${basedir}/src/main/webapp"/>
-                                </copy>
                                 <copy todir="${installer.staging.dir}/lib">
                                     <fileset dir="${basedir}/src/main/lib"/>
                                 </copy>
+                                <chmod dir="${installer.staging.dir}/bin/" includes="*.sh" perm="700"/>
+                                <fixcrlf srcdir="${installer.staging.dir}/bin/" includes="**/*.bat" eol="crlf"/>
+                                <fixcrlf srcdir="${installer.staging.dir}/config/" includes="**/*" eol="crlf"/>
                             </target>
                         </configuration>
                     </execution>
@@ -273,100 +327,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${dockerfile-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>mycollab/mycollab</repository>
+                    <tag>latest</tag>
+                    <contextDirectory>${project.build.directory}</contextDirectory>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>widgetset</id>
-            <activation>
-                <property>
-                    <name>environment</name>
-                    <value>widgetset</value>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.vaadin</groupId>
-                    <artifactId>vaadin-client-compiled</artifactId>
-                    <version>${vaadinVersion}</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>com.vaadin</groupId>
-                    <artifactId>vaadin-client</artifactId>
-                    <version>${vaadinVersion}</version>
-                    <scope>provided</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.vaadin</groupId>
-                    <artifactId>vaadin-client-compiler</artifactId>
-                    <version>${vaadinVersion}</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-clean-plugin</artifactId>
-                        <version>2.6.1</version>
-                        <configuration>
-                            <filesets>
-                                <fileset>
-                                    <directory>src/main/webapp/VAADIN/widgetsets</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.vaadin</groupId>
-                        <artifactId>vaadin-maven-plugin</artifactId>
-                        <version>${vaadinVersion}</version>
-                        <configuration>
-                            <extraJvmArgs>-Xmx1024M -Xss2048k</extraJvmArgs>
-                            <!-- <runTarget>mobilemail</runTarget> -->
-                            <!-- We are doing "inplace" but into subdir VAADIN/widgetsets. 
-                                This way compatible with Vaadin eclipse plugin. -->
-                            <webappDirectory>${basedir}/src/main/webapp/VAADIN/widgetsets
-                            </webappDirectory>
-                            <hostedWebapp>${basedir}/src/main/webapp/VAADIN/widgetsets
-                            </hostedWebapp>
-                            <!-- Most Vaadin apps don't need this stuff, 
-                                guide that to target -->
-                            <persistentunitcachedir>${project.build.directory}</persistentunitcachedir>
-                            <deploy>${project.build.directory}/gwt-deploy</deploy>
-                            <!-- Compile report is not typically needed either, 
-                                saves hunreds of mb disk -->
-                            <compileReport>false</compileReport>
-                            <noServer>true</noServer>
-                            <!-- Remove draftCompile when project is ready -->
-                            <draftCompile>false</draftCompile>
-
-                            <style>OBF</style>
-                            <runTarget>http://localhost:8080/</runTarget>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <configuration>
-                                    <!-- if you don't specify any modules, the plugin will find them -->
-                                    <modules>
-                                        <module>com.mycollab.widgetset.MyCollabMobileWidgetSet</module>
-                                        <module>com.mycollab.widgetset.MyCollabWidgetSet</module>
-                                    </modules>
-                                </configuration>
-                                <goals>
-                                    <goal>clean</goal>
-                                    <goal>resources</goal>
-                                    <goal>update-theme</goal>
-                                    <goal>update-widgetset</goal>
-                                    <goal>compile-theme</goal>
-                                    <goal>compile</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

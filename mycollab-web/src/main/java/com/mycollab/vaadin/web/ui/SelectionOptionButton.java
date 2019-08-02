@@ -1,27 +1,27 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.HasSelectableItemHandlers;
-import com.mycollab.vaadin.events.HasSelectionOptionHandlers;
-import com.mycollab.vaadin.events.SelectionOptionHandler;
-import com.vaadin.server.FontAwesome;
+import com.mycollab.vaadin.event.HasSelectableItemHandlers;
+import com.mycollab.vaadin.event.HasSelectionOptionHandlers;
+import com.mycollab.vaadin.event.SelectionOptionHandler;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.Resource;
 import com.vaadin.ui.Button;
 
@@ -43,10 +43,9 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
     private final Button selectThisPageBtn;
 
     public SelectionOptionButton(final HasSelectableItemHandlers selectableItemHandlers) {
-        super();
         addStyleName(WebThemes.BUTTON_ACTION);
         addStyleName(WebThemes.BUTTON_SMALL_PADDING);
-        setIcon(FontAwesome.SQUARE_O);
+        setIcon(VaadinIcons.SQUARE_SHADOW);
 
         addClickListener(clickEvent -> toggleChangeOption());
 
@@ -54,7 +53,7 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
 
         selectAllBtn = new Button("", clickEvent -> {
             isSelectAll = true;
-            setIcon(FontAwesome.CHECK_SQUARE_O);
+            setIcon(VaadinIcons.CHECK_SQUARE_O);
             fireSelectAll();
             setPopupVisible(false);
         });
@@ -62,7 +61,7 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
 
         selectThisPageBtn = new Button("", clickEvent -> {
             isSelectAll = false;
-            setIcon(FontAwesome.CHECK_SQUARE_O);
+            setIcon(VaadinIcons.CHECK_SQUARE_O);
             fireSelectCurrentPage();
             setPopupVisible(false);
         });
@@ -77,7 +76,7 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
 
         Button deSelectBtn = new Button(UserUIContext.getMessage(GenericI18Enum.ACTION_DESELECT_ALL), clickEvent -> {
             isSelectAll = false;
-            setIcon(FontAwesome.SQUARE_O);
+            setIcon(VaadinIcons.SQUARE_SHADOW);
             fireDeselect();
             setPopupVisible(false);
         });
@@ -113,7 +112,7 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
 
     public void setSelectedCheckbox(final boolean selected) {
         isSelected = selected;
-        Resource icon = (selected) ? FontAwesome.CHECK_SQUARE_O : FontAwesome.SQUARE_O;
+        Resource icon = (selected) ? VaadinIcons.CHECK_SQUARE_O : VaadinIcons.SQUARE_SHADOW;
         this.setIcon(icon);
     }
 
@@ -123,7 +122,7 @@ public class SelectionOptionButton extends SplitButton implements HasSelectionOp
         }
 
         isSelected = !isSelected;
-        final Resource icon = (isSelected) ? FontAwesome.CHECK_SQUARE_O : FontAwesome.SQUARE_O;
+        final Resource icon = (isSelected) ? VaadinIcons.CHECK_SQUARE_O : VaadinIcons.SQUARE_SHADOW;
         this.setIcon(icon);
 
         if (isSelected) {

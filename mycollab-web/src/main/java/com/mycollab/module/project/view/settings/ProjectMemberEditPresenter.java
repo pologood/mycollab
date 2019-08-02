@@ -1,23 +1,24 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
 import com.mycollab.core.MyCollabException;
-import com.mycollab.eventmanager.EventBusFactory;
+import com.mycollab.module.project.view.ProjectView;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.domain.ProjectMember;
@@ -27,7 +28,7 @@ import com.mycollab.module.project.service.ProjectMemberService;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
 import com.mycollab.spring.AppContextUtil;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.IEditFormHandler;
+import com.mycollab.vaadin.event.IEditFormHandler;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.ui.NotificationUtil;
@@ -51,19 +52,14 @@ public class ProjectMemberEditPresenter extends AbstractPresenter<ProjectMemberE
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void onSave(final SimpleProjectMember projectMember) {
+            public void onSave(SimpleProjectMember projectMember) {
                 saveProjectMember(projectMember);
-                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, null));
+                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, projectMember.getProjectid()));
             }
 
             @Override
             public void onCancel() {
-                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, null));
-            }
-
-            @Override
-            public void onSaveAndNew(final SimpleProjectMember projectMember) {
-
+                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, CurrentProjectVariables.getProjectId()));
             }
         });
     }
@@ -71,8 +67,8 @@ public class ProjectMemberEditPresenter extends AbstractPresenter<ProjectMemberE
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
         if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.USERS)) {
-            ProjectUserContainer userGroupContainer = (ProjectUserContainer) container;
-            userGroupContainer.setContent(view);
+            ProjectView projectView = (ProjectView) container;
+            projectView.gotoSubView(ProjectView.SETTING, view);
 
             SimpleProjectMember member = (SimpleProjectMember) data.getParams();
             view.editItem(member);
@@ -89,7 +85,7 @@ public class ProjectMemberEditPresenter extends AbstractPresenter<ProjectMemberE
 
     }
 
-    public void saveProjectMember(ProjectMember projectMember) {
+    private void saveProjectMember(ProjectMember projectMember) {
         ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
 
         if (projectMember.getId() == null) {

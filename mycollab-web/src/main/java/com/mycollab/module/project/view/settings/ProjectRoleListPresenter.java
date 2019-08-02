@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
@@ -27,10 +27,11 @@ import com.mycollab.module.project.i18n.ProjectMemberI18nEnum;
 import com.mycollab.module.project.i18n.ProjectRoleI18nEnum;
 import com.mycollab.module.project.service.ProjectRoleService;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
+import com.mycollab.module.project.view.ProjectView;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.ViewItemAction;
+import com.mycollab.vaadin.event.ViewItemAction;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.ui.NotificationUtil;
@@ -65,7 +66,7 @@ public class ProjectRoleListPresenter extends ListSelectionPresenter<ProjectRole
 
             @Override
             protected void onSelectExtra(String id) {
-                if (ViewItemAction.MAIL_ACTION().equals(id)) {
+                if (ViewItemAction.MAIL_ACTION.equals(id)) {
                     UI.getCurrent().addWindow(new MailFormWindow());
                 }
             }
@@ -86,9 +87,9 @@ public class ProjectRoleListPresenter extends ListSelectionPresenter<ProjectRole
     @Override
     protected void deleteSelectedItems() {
         if (!isSelectAll) {
-            Collection<SimpleProjectRole> currentDataList = view.getPagedBeanTable().getCurrentDataList();
+            Collection<SimpleProjectRole> roles = view.getPagedBeanGrid().getItems();
             List<ProjectRole> keyList = new ArrayList<>();
-            for (ProjectRole item : currentDataList) {
+            for (ProjectRole item : roles) {
                 if (item.isSelected()) {
                     if (Boolean.TRUE.equals(item.getIssystemrole())) {
                         NotificationUtil.showErrorNotification(UserUIContext.
@@ -100,12 +101,12 @@ public class ProjectRoleListPresenter extends ListSelectionPresenter<ProjectRole
             }
 
             if (keyList.size() > 0) {
-                projectRoleService.massRemoveWithSession(keyList, UserUIContext.getUsername(), MyCollabUI.getAccountId());
+                projectRoleService.massRemoveWithSession(keyList, UserUIContext.getUsername(), AppUI.getAccountId());
                 doSearch(searchCriteria);
                 checkWhetherEnableTableActionControl();
             }
         } else {
-            projectRoleService.removeByCriteria(searchCriteria, MyCollabUI.getAccountId());
+            projectRoleService.removeByCriteria(searchCriteria, AppUI.getAccountId());
             doSearch(searchCriteria);
         }
 
@@ -114,9 +115,8 @@ public class ProjectRoleListPresenter extends ListSelectionPresenter<ProjectRole
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
         if (CurrentProjectVariables.canRead(ProjectRolePermissionCollections.ROLES)) {
-            ProjectRoleContainer roleContainer = (ProjectRoleContainer) container;
-            roleContainer.removeAllComponents();
-            roleContainer.addComponent(view);
+            ProjectView projectView = (ProjectView) container;
+            projectView.gotoSubView(ProjectView.ROLE_ENTRY, view);
             searchCriteria = (ProjectRoleSearchCriteria) data.getParams();
             doSearch(searchCriteria);
 

@@ -1,29 +1,30 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
 import com.mycollab.vaadin.ui.ELabel;
 import com.mycollab.web.CustomLayoutExt;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import org.vaadin.viritin.layouts.MCssLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 
 /**
@@ -33,11 +34,11 @@ import org.vaadin.viritin.layouts.MHorizontalLayout;
 public class AddViewLayout extends CustomLayoutExt {
     private static final long serialVersionUID = 1L;
 
-    private FontAwesome viewIcon;
+    private VaadinIcons viewIcon;
     private Label titleLbl;
     private final MHorizontalLayout header;
 
-    public AddViewLayout(String viewTitle, FontAwesome viewIcon) {
+    public AddViewLayout(String viewTitle, VaadinIcons viewIcon) {
         super("addView");
 
         this.viewIcon = viewIcon;
@@ -81,9 +82,8 @@ public class AddViewLayout extends CustomLayoutExt {
 
     public void setTitle(final String title) {
         if (title != null) {
-            CssLayout titleWrap = new CssLayout();
-            titleWrap.setWidth("100%");
-            titleWrap.addComponent(ELabel.h3(title));
+            MCssLayout titleWrap = new MCssLayout().withFullWidth();
+            titleWrap.addComponent(ELabel.h3(title).withFullWidth());
             addComponent(titleWrap, "addViewTitle");
         } else {
             removeComponent("addViewTitle");

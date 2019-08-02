@@ -6,6 +6,7 @@
         id="SimpleRoleResult"
         type="com.mycollab.module.project.domain.SimpleProjectRole">
         <result column="permissionVal" jdbcType="LONGVARCHAR" property="permissionVal" />
+        <result column="numMembers" jdbcType="INTEGER" property="numMembers" />
     </resultMap>
 
     <sql id="querySearchCriteria">
@@ -16,8 +17,8 @@
             ${searchCriteria.id.operation} m_prj_role.id ${searchCriteria.id.compareOperator} @{searchCriteria.id.value,jdbcType=NUMERIC}
         #end
         
-        #ifnotnull($searchCriteria.rolename)
-            ${searchCriteria.rolename.operation} m_prj_role.rolename LIKE '%${searchCriteria.rolename.value}%'
+        #ifnotnull($searchCriteria.roleName)
+            ${searchCriteria.roleName.operation} m_prj_role.roleName LIKE '%${searchCriteria.roleName.value}%'
         #end
         
         #ifnotnull($searchCriteria.saccountid)
@@ -35,11 +36,11 @@
             SELECT m_prj_role.id, m_prj_role.rolename, m_prj_role.description, m_prj_role.sAccountId, 
                 m_prj_role.projectId, m_prj_role_permission.roleVal AS permissionVal, m_prj_role.isSystemRole
             FROM m_prj_role
-                LEFT OUTER JOIN m_prj_role_permission ON (m_prj_role_permission.roleid = m_prj_role.id)
+                INNER JOIN m_prj_role_permission ON (m_prj_role_permission.roleid = m_prj_role.id)
         ]]>
     </sql>
 
-    <select id="getTotalCount" resultType="int" parameterType="RoleSearchCriteria" lang="velocity">
+    <select id="getTotalCount" resultType="int" parameterType="com.mycollab.module.user.domain.criteria.RoleSearchCriteria" lang="velocity">
         SELECT count(*) as totalCount FROM m_prj_role
         #ifnotnull($_parameter.searchCriteria)
             #trimext("WHERE" "AND|OR")
@@ -48,7 +49,7 @@
         #end
     </select>
 
-    <select id="findPageableListByCriteria" resultMap="SimpleRoleResult" parameterType="RoleSearchCriteria" lang="velocity">
+    <select id="findPageableListByCriteria" resultMap="SimpleRoleResult" parameterType="com.mycollab.module.user.domain.criteria.RoleSearchCriteria" lang="velocity">
         <include refid="selectSimpleRole" />
         #ifnotnull($_parameter.searchCriteria)
             #trimext("WHERE" "AND|OR")

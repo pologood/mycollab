@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.user.accountsettings.localization;
 
@@ -27,10 +27,11 @@ public enum UserI18nEnum {
     LIST,
     DETAIL,
     NEW,
+    BULK_INVITE,
 
     MAIL_RECOVERY_PASSWORD_SUBJECT,
     MAIL_INVITE_USER_SUBJECT,
-    MAIL_CONFIRM_PASSWORD_SUBJECT,
+    MAIL_CONFIRM_EMAIL_SUBJECT,
 
     ERROR_NO_USER_IN_ACCOUNT,
     ERROR_PASSWORDS_ARE_NOT_MATCH,
@@ -46,7 +47,8 @@ public enum UserI18nEnum {
     BUTTON_CHANGE_AVATAR,
     BUTTON_CHANGE_PASSWORD,
     ACTION_RESEND_INVITATION,
-
+    ACTION_CONFIRM_EMAIL,
+    ACTION_CONFIRM_EMAIL_HELP,
     ACTION_MORE_INFORMATION,
 
     CANCEL_ACCOUNT_FIRST_LINE,
@@ -70,6 +72,7 @@ public enum UserI18nEnum {
     FORM_WEBSITE,
     FORM_HOME_PHONE,
     FORM_WORK_PHONE,
+    FORM_PASSWORD_HINT,
 
     OPT_PROFILE,
     OPT_CREATE_ANOTHER_USER,

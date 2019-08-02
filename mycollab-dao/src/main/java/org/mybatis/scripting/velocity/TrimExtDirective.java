@@ -1,19 +1,3 @@
-/**
- * This file is part of mycollab-dao.
- *
- * mycollab-dao is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * mycollab-dao is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-dao.  If not, see <http://www.gnu.org/licenses/>.
- */
 package org.mybatis.scripting.velocity;
 
 import org.apache.velocity.context.InternalContextAdapter;
@@ -62,7 +46,7 @@ public class TrimExtDirective extends Directive {
         int rightIndex = params.maxBody;
         if (!params.prefixOverrides.isEmpty()) {
             final String LEFT = params.body.substring(0, params.maxPrefixLength < params.maxBody ? params.maxPrefixLength
-                                    : params.maxBody).toUpperCase(Locale.ENGLISH);
+                    : params.maxBody).toUpperCase(Locale.ENGLISH);
             FastLinkedList<String>.Node n = params.prefixOverrides.start();
             while (n != null) {
                 if (LEFT.startsWith(n.data)) {

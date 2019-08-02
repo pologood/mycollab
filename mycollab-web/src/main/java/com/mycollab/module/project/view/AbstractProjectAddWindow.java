@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view;
 
@@ -37,10 +37,10 @@ public abstract class AbstractProjectAddWindow extends MWindow implements Cachea
 
     public AbstractProjectAddWindow(Project valuePrj) {
         super(UserUIContext.getMessage(ProjectI18nEnum.NEW));
-        this.withWidth("900px").withModal(true).withResizable(false).withCenter();
+        this.withWidth("800px").withModal(true).withResizable(false).withCenter();
         this.project = valuePrj;
-        if (project.getProjectstatus() == null) {
-            project.setProjectstatus(StatusI18nEnum.Open.name());
+        if (project.getStatus() == null) {
+            project.setStatus(StatusI18nEnum.Open.name());
         }
     }
 

@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.user;
 
@@ -53,7 +53,7 @@ public class ProjectOverdueTicketsWidget extends Depot {
         super(String.format("%s (0)", UserUIContext.getMessage(TicketI18nEnum.VAL_OVERDUE_TICKETS)), new CssLayout());
         this.setWidth("100%");
 
-        final CheckBox myItemsSelection = new CheckBox(UserUIContext.getMessage(GenericI18Enum.OPT_MY_ITEMS));
+        CheckBox myItemsSelection = new CheckBox(UserUIContext.getMessage(GenericI18Enum.OPT_MY_ITEMS));
         myItemsSelection.addValueChangeListener(valueChangeEvent -> {
             boolean isMyItemsOption = myItemsSelection.getValue();
             if (isMyItemsOption) {
@@ -77,9 +77,10 @@ public class ProjectOverdueTicketsWidget extends Depot {
 
     public void showOpenTickets() {
         searchCriteria = new ProjectTicketSearchCriteria();
-        searchCriteria.setIsOpenned(new SearchField());
+        searchCriteria.setOpen(new SearchField());
         searchCriteria.setProjectIds(new SetSearchField<>(CurrentProjectVariables.getProjectId()));
-        searchCriteria.setDueDate(new DateSearchField(DateTimeUtils.getCurrentDateWithoutMS()));
+        searchCriteria.setDueDate(new DateSearchField(DateTimeUtils.getCurrentDateWithoutMS().toLocalDate(),
+                DateSearchField.LESS_THAN));
         updateSearchResult();
     }
 

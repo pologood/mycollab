@@ -1,39 +1,44 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.ui.components;
 
+import com.google.common.collect.Sets;
 import com.mycollab.core.utils.StringUtils;
 import com.mycollab.module.project.service.ProjectMemberService;
 import com.mycollab.module.user.domain.SimpleUser;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.ui.IgnoreBindingField;
 import com.mycollab.vaadin.ui.UserAvatarControlFactory;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.CustomField;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author MyCollab Ltd.
  * @since 5.0.1
  */
-public class ProjectSubscribersComp extends CustomField {
+public class ProjectSubscribersComp extends IgnoreBindingField {
     private int projectId;
     private boolean defaultSelectAll;
     private Set<String> selectedUsers;
@@ -43,13 +48,13 @@ public class ProjectSubscribersComp extends CustomField {
     public ProjectSubscribersComp(boolean defaultSelectionAll, int projectId, String... selectedUsersParam) {
         this.projectId = projectId;
         this.defaultSelectAll = defaultSelectionAll;
-        this.selectedUsers = new HashSet<>(Arrays.asList(selectedUsersParam));
+        this.selectedUsers = Sets.newHashSet(selectedUsersParam);
     }
 
     @Override
     protected Component initContent() {
         ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
-        List<SimpleUser> members = projectMemberService.getActiveUsersInProject(projectId, MyCollabUI.getAccountId());
+        List<SimpleUser> members = projectMemberService.getActiveUsersInProject(projectId, AppUI.getAccountId());
         CssLayout container = new CssLayout();
         container.setStyleName("followers-container");
         final CheckBox selectAllCheckbox = new CheckBox("All", defaultSelectAll);
@@ -95,8 +100,13 @@ public class ProjectSubscribersComp extends CustomField {
     }
 
     @Override
-    public Class getType() {
-        return Object.class;
+    protected void doSetValue(Object o) {
+
+    }
+
+    @Override
+    public Object getValue() {
+        return null;
     }
 
     private static class FollowerCheckbox extends CheckBox {

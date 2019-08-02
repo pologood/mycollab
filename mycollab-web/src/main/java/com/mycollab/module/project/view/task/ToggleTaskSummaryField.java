@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.task;
 
@@ -23,38 +23,37 @@ import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.common.i18n.OptionI18nEnum.StatusI18nEnum;
 import com.mycollab.core.utils.BeanUtility;
 import com.mycollab.core.utils.StringUtils;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.html.DivLessFormatter;
 import com.mycollab.module.project.CurrentProjectVariables;
-import com.mycollab.module.project.ProjectLinkBuilder;
+import com.mycollab.module.project.ProjectLinkGenerator;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.ProjectTypeConstants;
 import com.mycollab.module.project.domain.SimpleTask;
 import com.mycollab.module.project.event.TaskEvent;
 import com.mycollab.module.project.i18n.ProjectCommonI18nEnum;
 import com.mycollab.module.project.i18n.TaskI18nEnum;
-import com.mycollab.module.project.service.ProjectTaskService;
-import com.mycollab.module.project.ui.components.BlockRowRender;
+import com.mycollab.module.project.service.TaskService;
+import com.mycollab.module.project.ui.components.TicketRowRender;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.TooltipHelper;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ELabel;
-import com.mycollab.vaadin.ui.UIConstants;
 import com.mycollab.vaadin.ui.UIUtils;
 import com.mycollab.vaadin.web.ui.AbstractToggleSummaryField;
 import com.mycollab.vaadin.web.ui.ConfirmDialogExt;
 import com.mycollab.vaadin.web.ui.WebThemes;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.themes.ValoTheme;
-import org.vaadin.addons.CssCheckBox;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
-
-import static com.mycollab.vaadin.TooltipHelper.TOOLTIP_ID;
 
 /**
  * @author MyCollab Ltd
@@ -64,21 +63,20 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
     private boolean isRead = true;
     private SimpleTask task;
     private int maxLength;
-    private CssCheckBox toggleStatusSelect;
+    private CheckBox toggleStatusSelect;
 
-    public ToggleTaskSummaryField(final SimpleTask task, boolean toggleStatusSupport) {
+    public ToggleTaskSummaryField(SimpleTask task, boolean toggleStatusSupport) {
         this(task, Integer.MAX_VALUE, toggleStatusSupport, false);
     }
 
-    public ToggleTaskSummaryField(final SimpleTask task, int maxLength, boolean toggleStatusSupport, boolean canRemove) {
+    public ToggleTaskSummaryField(SimpleTask task, int maxLength, boolean toggleStatusSupport, boolean canRemove) {
         this.setWidth("100%");
         this.maxLength = maxLength;
         this.task = task;
-        titleLinkLbl = ELabel.html(buildTaskLink()).withWidthUndefined().withStyleName(UIConstants.LABEL_WORD_WRAP);
+        titleLinkLbl = ELabel.html(buildTaskLink()).withUndefinedWidth().withStyleName(WebThemes.LABEL_WORD_WRAP);
 
         if (toggleStatusSupport && CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.TASKS)) {
-            toggleStatusSelect = new CssCheckBox();
-            toggleStatusSelect.setSimpleMode(true);
+            toggleStatusSelect = new CheckBox();
             toggleStatusSelect.setValue(task.isCompleted());
             displayTooltip();
             toggleStatusSelect.addValueChangeListener(valueChangeEvent -> {
@@ -92,28 +90,27 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
                     titleLinkLbl.addStyleName(WebThemes.LINK_COMPLETED);
                 }
                 displayTooltip();
-                ProjectTaskService projectTaskService = AppContextUtil.getSpringBean(ProjectTaskService.class);
-                projectTaskService.updateWithSession(task, UserUIContext.getUsername());
+                TaskService taskService = AppContextUtil.getSpringBean(TaskService.class);
+                taskService.updateWithSession(task, UserUIContext.getUsername());
 
                 if (StatusI18nEnum.Closed.name().equals(task.getStatus())) {
-                    Integer countOfOpenSubTasks = projectTaskService.getCountOfOpenSubTasks(task.getId());
+                    Integer countOfOpenSubTasks = taskService.getCountOfOpenSubTasks(task.getId());
                     if (countOfOpenSubTasks > 0) {
                         ConfirmDialogExt.show(UI.getCurrent(),
-                                UserUIContext.getMessage(GenericI18Enum.OPT_QUESTION, MyCollabUI.getSiteName()),
+                                UserUIContext.getMessage(GenericI18Enum.OPT_QUESTION, AppUI.getSiteName()),
                                 UserUIContext.getMessage(ProjectCommonI18nEnum.OPT_CLOSE_SUB_ASSIGNMENTS),
-                                UserUIContext.getMessage(GenericI18Enum.BUTTON_YES),
-                                UserUIContext.getMessage(GenericI18Enum.BUTTON_NO),
+                                UserUIContext.getMessage(GenericI18Enum.ACTION_YES),
+                                UserUIContext.getMessage(GenericI18Enum.ACTION_NO),
                                 confirmDialog -> {
                                     if (confirmDialog.isConfirmed()) {
-                                        projectTaskService.massUpdateTaskStatuses(task.getId(), StatusI18nEnum.Closed.name(),
-                                                MyCollabUI.getAccountId());
+                                        taskService.massUpdateTaskStatuses(task.getId(), StatusI18nEnum.Closed.name(),
+                                                AppUI.getAccountId());
                                     }
                                 });
                     }
                 }
             });
-            this.addComponent(toggleStatusSelect);
-            this.addComponent(ELabel.EMPTY_SPACE());
+            this.withComponents(toggleStatusSelect, ELabel.EMPTY_SPACE());
         }
 
         this.addComponent(titleLinkLbl);
@@ -131,11 +128,16 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
                     editField.focus();
                     ToggleTaskSummaryField.this.addComponent(editField);
                     ToggleTaskSummaryField.this.removeStyleName("editable-field");
-                    editField.addValueChangeListener(valueChangeEvent -> updateFieldValue(editField));
+                    editField.addShortcutListener(new ShortcutListener("enter", ShortcutAction.KeyCode.ENTER, (int[]) null) {
+                        @Override
+                        public void handleAction(Object sender, Object target) {
+                            updateFieldValue(editField);
+                        }
+                    });
                     editField.addBlurListener(blurEvent -> updateFieldValue(editField));
                     isRead = !isRead;
                 }
-            }).withIcon(FontAwesome.EDIT).withStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+            }).withIcon(VaadinIcons.EDIT).withStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
             instantEditBtn.setDescription(UserUIContext.getMessage(TaskI18nEnum.OPT_EDIT_TASK_NAME));
             buttonControls.with(instantEditBtn);
         }
@@ -143,22 +145,22 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
         if (canRemove && CurrentProjectVariables.canAccess(ProjectRolePermissionCollections.TASKS)) {
             MButton removeBtn = new MButton("", clickEvent -> {
                 ConfirmDialogExt.show(UI.getCurrent(),
-                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, MyCollabUI.getSiteName()),
+                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, AppUI.getSiteName()),
                         UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_SINGLE_ITEM_MESSAGE),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_YES),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_NO),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_YES),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_NO),
                         confirmDialog -> {
                             if (confirmDialog.isConfirmed()) {
-                                AppContextUtil.getSpringBean(ProjectTaskService.class).removeWithSession(task,
-                                        UserUIContext.getUsername(), MyCollabUI.getAccountId());
-                                BlockRowRender rowRenderer = UIUtils.getRoot(ToggleTaskSummaryField.this, BlockRowRender.class);
+                                AppContextUtil.getSpringBean(TaskService.class).removeWithSession(task,
+                                        UserUIContext.getUsername(), AppUI.getAccountId());
+                                TicketRowRender rowRenderer = UIUtils.getRoot(ToggleTaskSummaryField.this, TicketRowRender.class);
                                 if (rowRenderer != null) {
                                     rowRenderer.selfRemoved();
                                 }
                                 EventBusFactory.getInstance().post(new TaskEvent.TaskDeleted(this, task.getId()));
                             }
                         });
-            }).withIcon(FontAwesome.TRASH).withStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
+            }).withIcon(VaadinIcons.TRASH).withStyleName(ValoTheme.BUTTON_ICON_ALIGN_TOP);
             buttonControls.with(removeBtn);
         }
         if (buttonControls.getComponentCount() > 0) {
@@ -176,14 +178,12 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
 
     private void updateFieldValue(TextField editField) {
         removeComponent(editField);
-        addComponent(titleLinkLbl);
-        addComponent(buttonControls);
-        addStyleName("editable-field");
+        withComponents(titleLinkLbl, buttonControls).withStyleName("editable-field");
         String newValue = editField.getValue();
         if (StringUtils.isNotBlank(newValue) && !newValue.equals(task.getName())) {
             task.setName(newValue);
             titleLinkLbl.setValue(buildTaskLink());
-            ProjectTaskService taskService = AppContextUtil.getSpringBean(ProjectTaskService.class);
+            TaskService taskService = AppContextUtil.getSpringBean(TaskService.class);
             taskService.updateSelectiveWithSession(BeanUtility.deepClone(task), UserUIContext.getUsername());
         }
 
@@ -192,12 +192,13 @@ public class ToggleTaskSummaryField extends AbstractToggleSummaryField {
 
     private String buildTaskLink() {
         String linkName = StringUtils.trim(task.getName(), maxLength, true);
-        A taskLink = new A().setId("tag" + TOOLTIP_ID).setHref(ProjectLinkBuilder.generateTaskPreviewFullLink(task.getTaskkey(),
-                CurrentProjectVariables.getShortName())).appendText(linkName).setStyle("display:inline");
+        A taskLink = new A().setId("tag" + TooltipHelper.TOOLTIP_ID).setHref(ProjectLinkGenerator.
+                generateTaskPreviewLink(CurrentProjectVariables.getShortName(), task.getTicketKey())).
+                appendText(linkName).setStyle("display:inline");
         Div resultDiv = new DivLessFormatter().appendChild(taskLink);
         if (task.isOverdue()) {
             taskLink.setCSSClass("overdue");
-            resultDiv.appendChild(new Span().setCSSClass(UIConstants.META_INFO).appendText(" - " + UserUIContext
+            resultDiv.appendChild(new Span().setCSSClass(WebThemes.META_INFO).appendText(" - " + UserUIContext
                     .getMessage(ProjectCommonI18nEnum.OPT_DUE_IN, UserUIContext.formatDuration(task.getDuedate()))));
         } else if (task.isCompleted()) {
             taskLink.setCSSClass("completed");

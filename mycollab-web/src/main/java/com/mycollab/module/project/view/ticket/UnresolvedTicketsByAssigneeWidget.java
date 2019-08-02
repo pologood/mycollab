@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.ticket;
 
@@ -22,8 +22,6 @@ import com.mycollab.core.utils.BeanUtility;
 import com.mycollab.core.utils.StringUtils;
 import com.mycollab.db.arguments.SearchField;
 import com.mycollab.db.arguments.StringSearchField;
-import com.mycollab.eventmanager.ApplicationEventListener;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria;
 import com.mycollab.module.project.event.TicketEvent;
@@ -33,14 +31,16 @@ import com.mycollab.module.user.CommonTooltipGenerator;
 import com.mycollab.module.user.domain.SimpleUser;
 import com.mycollab.module.user.service.UserService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.ApplicationEventListener;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.ui.UIConstants;
 import com.mycollab.vaadin.ui.UserAvatarControlFactory;
-import com.mycollab.vaadin.web.ui.Depot;
 import com.mycollab.vaadin.web.ui.ProgressBarIndicator;
 import com.mycollab.vaadin.web.ui.WebThemes;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import org.apache.commons.collections.CollectionUtils;
 import org.vaadin.viritin.button.MButton;
@@ -54,7 +54,7 @@ import java.util.List;
  * @author MyCollab Ltd.
  * @since 4.0
  */
-public class UnresolvedTicketsByAssigneeWidget extends Depot {
+public class UnresolvedTicketsByAssigneeWidget extends Panel {
     private static final long serialVersionUID = 1L;
 
     private ProjectTicketSearchCriteria searchCriteria;
@@ -74,7 +74,6 @@ public class UnresolvedTicketsByAssigneeWidget extends Depot {
 
     public UnresolvedTicketsByAssigneeWidget() {
         super("", new MVerticalLayout());
-        setContentBorder(true);
     }
 
     @Override
@@ -89,18 +88,19 @@ public class UnresolvedTicketsByAssigneeWidget extends Depot {
         super.detach();
     }
 
-    public void setSearchCriteria(final ProjectTicketSearchCriteria searchCriteria) {
+    public void setSearchCriteria(ProjectTicketSearchCriteria searchCriteria) {
         this.searchCriteria = searchCriteria;
 
         ProjectTicketService projectTicketService = AppContextUtil.getSpringBean(ProjectTicketService.class);
         totalCountItems = projectTicketService.getTotalCount(searchCriteria);
         groupItems = projectTicketService.getAssigneeSummary(searchCriteria);
 
-        this.setTitle(String.format("%s (%d)", UserUIContext.getMessage(TaskI18nEnum.WIDGET_UNRESOLVED_BY_ASSIGNEE_TITLE), totalCountItems));
+        this.setCaption(String.format("%s (%d)", UserUIContext.getMessage(TaskI18nEnum.WIDGET_UNRESOLVED_BY_ASSIGNEE_TITLE), totalCountItems));
         displayPlainMode();
     }
 
     private void displayPlainMode() {
+        MVerticalLayout bodyContent = (MVerticalLayout) getContent();
         bodyContent.removeAllComponents();
         int totalAssignTicketCounts = 0;
         if (CollectionUtils.isNotEmpty(groupItems)) {
@@ -117,7 +117,7 @@ public class UnresolvedTicketsByAssigneeWidget extends Depot {
 
                 TicketAssigneeLink ticketAssigneeLink = new TicketAssigneeLink(assignUser, item.getExtraValue(), assignUserFullName);
                 assigneeLayout.addComponent(new MCssLayout(ticketAssigneeLink).withWidth("110px"));
-                ProgressBarIndicator indicator = new ProgressBarIndicator(totalCountItems, totalCountItems - item.getValue().intValue(), false);
+                ProgressBarIndicator indicator = new ProgressBarIndicator(totalCountItems, item.getValue().intValue(), false);
                 indicator.setWidth("100%");
                 assigneeLayout.with(indicator).expand(indicator);
                 bodyContent.addComponent(assigneeLayout);
@@ -136,7 +136,7 @@ public class UnresolvedTicketsByAssigneeWidget extends Depot {
             MHorizontalLayout assigneeLayout = new MHorizontalLayout().withFullWidth();
             assigneeLayout.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
             assigneeLayout.addComponent(new MCssLayout(unassignLink).withWidth("110px"));
-            ProgressBarIndicator indicator = new ProgressBarIndicator(totalCountItems, totalCountItems - totalUnassignTicketsCount, false);
+            ProgressBarIndicator indicator = new ProgressBarIndicator(totalCountItems, totalUnassignTicketsCount, false);
             indicator.setWidth("100%");
             assigneeLayout.with(indicator).expand(indicator);
             bodyContent.addComponent(assigneeLayout);
@@ -156,11 +156,11 @@ public class UnresolvedTicketsByAssigneeWidget extends Depot {
                 EventBusFactory.getInstance().post(new TicketEvent.SearchRequest(UnresolvedTicketsByAssigneeWidget.this,
                         criteria));
             }).withWidth("100%").withIcon(UserAvatarControlFactory.createAvatarResource(assigneeAvatarId, 16))
-                    .withStyleName(WebThemes.BUTTON_LINK, UIConstants.TEXT_ELLIPSIS);
+                    .withStyleName(WebThemes.BUTTON_LINK, WebThemes.TEXT_ELLIPSIS);
             UserService service = AppContextUtil.getSpringBean(UserService.class);
-            SimpleUser user = service.findUserByUserNameInAccount(assignee, MyCollabUI.getAccountId());
+            SimpleUser user = service.findUserByUserNameInAccount(assignee, AppUI.getAccountId());
             this.setDescription(CommonTooltipGenerator.generateTooltipUser(UserUIContext.getUserLocale(), user,
-                    MyCollabUI.getSiteUrl(), UserUIContext.getUserTimeZone()));
+                    AppUI.getSiteUrl(), UserUIContext.getUserTimeZone()), ContentMode.HTML);
         }
     }
 }

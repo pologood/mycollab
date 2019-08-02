@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-config.
+ * Copyright © MyCollab
  *
- * mycollab-config is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-config is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-config.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.configuration;
 
@@ -29,58 +29,20 @@ import java.util.Properties;
 
 /**
  * This file contains all constants define in system properties file
- * mycollab.properties read at system started.
+ * application.properties read at system started.
  *
  * @author MyCollab Ltd.
  * @since 1.0
  */
 public class ApplicationProperties {
-    private static final String RESOURCE_PROPERTIES = "mycollab.properties";
+    private static final String RESOURCE_PROPERTIES = "application.properties";
     private static final String DECRYPT_PASS = "esofthead321";
 
     private static Properties properties;
 
-    public static final String MYCOLLAB_PORT = "mycollab.port";
-
-    public static final String DB_USERNAME = "db.username";
-    public static final String DB_PASSWORD = "db.password";
-    public static final String DB_DRIVER_CLASS = "db.driverClassName";
-    public static final String DB_URL = "db.url";
-
-    public static final String CDN_URL = "cdn.url";
-    public static final String APP_URL = "app.url";
-
-    public static final String FACEBOOK_URL = "facebook.url";
-    public static final String GOOGLE_URL = "google.url";
-    public static final String LINKEDIN_URL = "linkedin.url";
-    public static final String TWITTER_URL = "twitter.url";
-
-    public static final String MAIL_SMTPHOST = "mail.smtphost";
-    public static final String MAIL_PORT = "mail.port";
-    public static final String MAIL_USERNAME = "mail.username";
-    public static final String MAIL_PASSWORD = "mail.password";
-    public static final String MAIL_IS_TLS = "mail.isTLS";
-    public static final String MAIL_IS_SSL = "mail.isSSL";
-    public static final String MAIL_NOTIFY = "mail.notify";
-
-    public static final String ERROR_SENDTO = "error.sendTo";
-    public static final String STORAGE_SYSTEM = "storageSystem";
-
-    public static final String SITE_NAME = "site.name";
-    public static final String SERVER_ADDRESS = "server.address";
-
-    public static final String RESOURCE_DOWNLOAD_URL = "resource.downloadUrl";
-    public static final String API_URL = "api.url";
-
-    public static final String DROPBOX_AUTH_LINK = "dropbox.callbackUrl";
-    public static final String GOOGLE_DRIVE_LINK = "ggDrive.callbackUrl";
-
     public static final String BI_ENDECRYPT_PASSWORD = "endecryptPassword";
 
-    public static final String COPYRIGHT_MSG = "copyright";
     public static final String DEFAULT_LOCALE = "defaultLocale";
-
-    public static final String PULL_METHOD = "pull_method";
 
     public static void loadProps() {
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
@@ -88,10 +50,10 @@ public class ApplicationProperties {
 
         properties = new EncryptableProperties(encryptor);
         try {
-            File myCollabResourceFile = getAppConfigFile();
+            File configFile = getAppConfigFile();
 
-            if (myCollabResourceFile != null) {
-                try (InputStreamReader isr = new InputStreamReader(new FileInputStream(myCollabResourceFile), "UTF-8")) {
+            if (configFile != null) {
+                try (InputStreamReader isr = new InputStreamReader(new FileInputStream(configFile), "UTF-8")) {
                     properties.load(isr);
                 }
             } else {
@@ -112,7 +74,7 @@ public class ApplicationProperties {
     }
 
     public static File getAppConfigFile() {
-        return FileUtils.getDesireFile(FileUtils.getUserFolder(), "conf/mycollab.properties", "src/main/conf/mycollab.properties");
+        return FileUtils.getDesireFile(FileUtils.getUserFolder(), "config/mycollab.properties", "src/main/config/mycollab.properties");
     }
 
     public static Properties getAppProperties() {

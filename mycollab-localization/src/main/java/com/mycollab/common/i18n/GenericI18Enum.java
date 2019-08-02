@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.common.i18n;
 
@@ -60,9 +60,7 @@ public enum GenericI18Enum {
     BUTTON_SELECT,
     BUTTON_NEW_FILTER,
     BUTTON_ADD_CRITERIA,
-    BUTTON_YES,
     BUTTON_OK,
-    BUTTON_NO,
     BUTTON_CLEAR,
     BUTTON_EDIT,
     BUTTON_ACCEPT,
@@ -116,6 +114,8 @@ public enum GenericI18Enum {
     ACTION_DESELECT_ALL,
     ACTION_CHANGE_COLOR,
     ACTION_NEW,
+    ACTION_YES,
+    ACTION_NO,
 
     TABLE_SELECTED_ITEM_TITLE,
 
@@ -177,6 +177,7 @@ public enum GenericI18Enum {
     EXT_MODIFIED_ITEM,
     EXT_NO_ITEM,
 
+    OPT_ITEM_VALUE,
     OPT_SAVED_FILTER,
     OPT_CHANGE_HISTORY,
     OPT_MY_ITEMS,
@@ -209,6 +210,9 @@ public enum GenericI18Enum {
     OPT_SHARED_TO_ME,
     OPT_CHANGE_IMAGE,
     OPT_UPLOAD_IMAGE,
+    OPT_FROM_TO,
+    OPT_ACTIONS,
+    OPT_DETAILS,
 
     M_BUTTON_BACK,
     M_BUTTON_SEND

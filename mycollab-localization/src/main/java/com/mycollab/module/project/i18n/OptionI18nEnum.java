@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.i18n;
 
@@ -28,15 +28,9 @@ import com.mycollab.core.MyCollabException;
 public class OptionI18nEnum {
     public static Priority[] priorities = {Priority.Urgent, Priority.High, Priority.Medium, Priority.Low, Priority.None};
 
-    public static BugStatus[] bug_statuses = {BugStatus.Open, BugStatus.Verified, BugStatus.Resolved, BugStatus.ReOpen};
-
     public static BugSeverity[] bug_severities = {BugSeverity.Critical, BugSeverity.Major, BugSeverity.Minor, BugSeverity.Trivial};
 
-    public static BugResolution[] bug_resolutions = {BugResolution.Fixed, BugResolution.Won_Fix, BugResolution.Duplicate,
-            BugResolution.Invalid, BugResolution.CannotReproduce, BugResolution.InComplete};
-
-    public static InvoiceStatus[] invoiceStatuses = {InvoiceStatus.Paid,
-            InvoiceStatus.Sent, InvoiceStatus.Scheduled};
+    public static InvoiceStatus[] invoiceStatuses = {InvoiceStatus.Paid, InvoiceStatus.Sent, InvoiceStatus.Scheduled};
 
     @BaseName("project-milestone-status")
     @LocaleData(value = {@Locale("en-US")}, defaultCharset = "UTF-8")
@@ -54,12 +48,6 @@ public class OptionI18nEnum {
     @LocaleData(value = {@Locale("en-US")}, defaultCharset = "UTF-8")
     public enum Priority {
         Urgent, High, Medium, Low, None
-    }
-
-    @BaseName("project-bug-status")
-    @LocaleData(value = {@Locale("en-US")}, defaultCharset = "UTF-8")
-    public enum BugStatus {
-        Open, Verified, Resolved, ReOpen
     }
 
     @BaseName("project-bug-severity")
@@ -80,20 +68,24 @@ public class OptionI18nEnum {
         None
     }
 
-    @BaseName("project-bug-related")
+    @BaseName("project-ticket-relation")
     @LocaleData(value = {@Locale("en-US")}, defaultCharset = "UTF-8")
-    public enum BugRelation {
-        Related, Duplicated, Block, DependsOn, Duplicate, Relation;
+    public enum TicketRel {
+        Duplicated, Block, DependsOn, Duplicate, Relation;
 
         public Enum getReverse() {
             if (this == Duplicated) {
                 return Duplicate;
-            } else if (this == Related) {
-                return Relation;
             } else if (this == Block) {
                 return DependsOn;
+            } else if (this == DependsOn) {
+                return Block;
+            } else if (this == Duplicate) {
+                return Duplicated;
+            } else if (this == Relation) {
+                return Relation;
             } else {
-                throw new MyCollabException("Not support");
+                throw new MyCollabException("Not support relation type " + this);
             }
         }
     }

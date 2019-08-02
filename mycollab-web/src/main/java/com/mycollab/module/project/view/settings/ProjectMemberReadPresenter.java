@@ -1,25 +1,24 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.db.arguments.NumberSearchField;
 import com.mycollab.db.arguments.SetSearchField;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectMemberStatusConstants;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
@@ -28,10 +27,12 @@ import com.mycollab.module.project.domain.criteria.ProjectMemberSearchCriteria;
 import com.mycollab.module.project.event.ProjectMemberEvent;
 import com.mycollab.module.project.service.ProjectMemberService;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
+import com.mycollab.module.project.view.ProjectView;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.DefaultPreviewFormHandler;
+import com.mycollab.vaadin.event.DefaultPreviewFormHandler;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.ui.NotificationUtil;
@@ -62,15 +63,15 @@ public class ProjectMemberReadPresenter extends AbstractPresenter<ProjectMemberR
             @Override
             public void onDelete(final SimpleProjectMember data) {
                 ConfirmDialogExt.show(UI.getCurrent(),
-                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, MyCollabUI.getSiteName()),
+                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, AppUI.getSiteName()),
                         UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_SINGLE_ITEM_MESSAGE),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_YES),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_NO),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_YES),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_NO),
                         confirmDialog -> {
                             if (confirmDialog.isConfirmed()) {
                                 ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
-                                projectMemberService.removeWithSession(data, UserUIContext.getUsername(), MyCollabUI.getAccountId());
-                                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, null));
+                                projectMemberService.removeWithSession(data, UserUIContext.getUsername(), AppUI.getAccountId());
+                                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, data.getProjectid()));
                             }
                         });
             }
@@ -84,16 +85,16 @@ public class ProjectMemberReadPresenter extends AbstractPresenter<ProjectMemberR
 
             @Override
             public void onCancel() {
-                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, null));
+                EventBusFactory.getInstance().post(new ProjectMemberEvent.GotoList(this, CurrentProjectVariables.getProjectId()));
             }
 
             @Override
             public void gotoNext(SimpleProjectMember data) {
                 ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
                 ProjectMemberSearchCriteria criteria = new ProjectMemberSearchCriteria();
-                criteria.setProjectId(new NumberSearchField(CurrentProjectVariables.getProjectId()));
-                criteria.setId(new NumberSearchField(data.getId(), NumberSearchField.GREATER()));
-                criteria.setSaccountid(new NumberSearchField(MyCollabUI.getAccountId()));
+                criteria.setProjectIds(new SetSearchField(data.getProjectid()));
+                criteria.setId(new NumberSearchField(data.getId(), NumberSearchField.GREATER));
+                criteria.setSaccountid(new NumberSearchField(AppUI.getAccountId()));
                 criteria.setStatuses(new SetSearchField<>(ProjectMemberStatusConstants.ACTIVE, ProjectMemberStatusConstants.NOT_ACCESS_YET));
 
                 Integer nextId = projectMemberService.getNextItemKey(criteria);
@@ -109,8 +110,8 @@ public class ProjectMemberReadPresenter extends AbstractPresenter<ProjectMemberR
             public void gotoPrevious(SimpleProjectMember data) {
                 ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
                 ProjectMemberSearchCriteria criteria = new ProjectMemberSearchCriteria();
-                criteria.setProjectId(new NumberSearchField(CurrentProjectVariables.getProjectId()));
-                criteria.setId(new NumberSearchField(data.getId(), NumberSearchField.LESS_THAN()));
+                criteria.setProjectIds(new SetSearchField<>(data.getProjectid()));
+                criteria.setId(new NumberSearchField(data.getId(), NumberSearchField.LESS_THAN));
                 criteria.setStatuses(new SetSearchField<>(ProjectMemberStatusConstants.ACTIVE, ProjectMemberStatusConstants.NOT_ACCESS_YET));
 
                 Integer nextId = projectMemberService.getPreviousItemKey(criteria);
@@ -136,16 +137,17 @@ public class ProjectMemberReadPresenter extends AbstractPresenter<ProjectMemberR
             ProjectMemberService prjMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
             SimpleProjectMember prjMember = null;
             if (data.getParams() instanceof Integer) {
-                prjMember = prjMemberService.findById((Integer) data.getParams(), MyCollabUI.getAccountId());
+                prjMember = prjMemberService.findById((Integer) data.getParams(), AppUI.getAccountId());
 
             } else if (data.getParams() instanceof String) {
                 String username = (String) data.getParams();
-                prjMember = prjMemberService.findMemberByUsername(username, CurrentProjectVariables.getProjectId(), MyCollabUI.getAccountId());
+                prjMember = prjMemberService.findMemberByUsername(username, CurrentProjectVariables.getProjectId(), AppUI.getAccountId());
             }
 
             if (prjMember != null) {
-                ProjectUserContainer userGroupContainer = (ProjectUserContainer) container;
-                userGroupContainer.setContent(view);
+                ProjectView projectView = (ProjectView) container;
+                projectView.gotoSubView(ProjectView.USERS_ENTRY, view);
+
                 view.previewItem(prjMember);
                 ProjectBreadcrumb breadCrumb = ViewManager.getCacheComponent(ProjectBreadcrumb.class);
                 breadCrumb.gotoUserRead(prjMember);

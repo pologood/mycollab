@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-jackrabbit.
+ * Copyright © MyCollab
  *
- * mycollab-jackrabbit is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-jackrabbit is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-jackrabbit.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.page;
 
@@ -40,32 +40,30 @@ public class PageSessionFactory extends JcrSessionFactory {
     protected void registerNodeTypes() throws Exception {
         LOG.info("Register node types");
         Session session = getSession();
-        final String[] jcrNamespaces = session.getWorkspace()
-                .getNamespaceRegistry().getPrefixes();
+        final String[] jcrNamespaces = session.getWorkspace().getNamespaceRegistry().getPrefixes();
         boolean createNamespace = true;
-        for (int i = 0; i < jcrNamespaces.length; i++) {
-            if (jcrNamespaces[i].equals("wiki")) {
+        for (String jcrNamespace : jcrNamespaces) {
+            if (jcrNamespace.equals("wiki")) {
                 createNamespace = false;
                 LOG.debug("Jackrabbit OCM namespace exists.");
             }
         }
         if (createNamespace) {
             session.getWorkspace().getNamespaceRegistry().registerNamespace("wiki", "http://www.esofthead.com/wiki");
-            LOG.debug("Successfully created Mycollab content namespace.");
+            LOG.debug("Successfully created MyCollab content namespace.");
         }
         if (session.getRootNode() == null) {
             throw new ContentException("Jcr session setup not successful.");
         }
 
-        NodeTypeManager manager = session.getWorkspace()
-                .getNodeTypeManager();
+        NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         manager.registerNodeType(createWikiPageType(manager), true);
         manager.registerNodeType(createWikiFolderType(manager), true);
         session.logout();
     }
 
     private NodeTypeTemplate createWikiPageType(NodeTypeManager manager) throws RepositoryException {
-        LOG.info("Register mycollab content type");
+        LOG.info("Register MyCollab content type");
         NodeType hierachyNode = manager.getNodeType(NodeType.NT_HIERARCHY_NODE);
         // Create content node type
         NodeTypeTemplate pageTypeTemplate = manager.createNodeTypeTemplate(hierachyNode);
@@ -126,7 +124,6 @@ public class PageSessionFactory extends JcrSessionFactory {
         return pageTypeTemplate;
     }
 
-    @SuppressWarnings("unchecked")
     private NodeTypeTemplate createWikiFolderType(NodeTypeManager manager) throws RepositoryException {
         // Create content node type
         NodeTypeTemplate folderTypeTemplate = manager.createNodeTypeTemplate();

@@ -28,7 +28,7 @@ label {
             <h4>MyCollab is well tested on various platforms include Windows, Linux and MacOS. We have been
                 spending countless hours to do the installation testing on
                 as many machines as possible. If you can not install MyCollab successfully, please raise your case in
-                 our <a href="http://support.mycollab.com/list/42580-general-help/" target="_blank">Support
+                 our <a href="https://mycollab.userecho.com/communities/3-general-help/topics/" target="_blank">Support
                  page</a></h4>
         </div>
         <hr size="1" style="margin: 20px 0 1px 0; ">
@@ -52,7 +52,7 @@ label {
                                     <tr>
                                         <td><input id="serverAddress" placeholder="Example: 192.168.1.70 or myservername.com"/></td>
                                     </tr>
-                                    <tr><td><h4>You can get this info from your web host. It could be an IP address or server name. You must not include the server port in this value. If you want to change the server port, please use <a href="https://community.mycollab.com/faq/#defaultport">this way</a></h4></td></tr>
+                                    <tr><td><h4>You can get this info from your web host. It could be an IP address or server name. You must not include the server port in this value. If you want to change the server port, please use <a href="https://docs.mycollab.com/getting-started/configuration/">this way</a></h4></td></tr>
                                 </tbody>
                             </table>
                         </form>
@@ -106,7 +106,7 @@ label {
                             </table>
                         </form>
                         <div class="right" style="margin-top: 10px;">
-                            <button id="validate" class="v-button v-button-greenbtn" type="button" onclick="return databaseValidate();"><span style="font-size: 15px;">Check Connection</span></button>
+                            <button id="validate" class="v-button v-button-action-button" type="button" onclick="return databaseValidate();"><span style="font-size: 15px;">Check Connection</span></button>
                         </div>
                     </td>
                 </tr>
@@ -114,7 +114,7 @@ label {
             <table style="width:100%;margin-top: 20px;">
                 <tr>
                     <td style="vertical-align: top; width: 400px;"><div style="margin-top:10px;">EMAIL SETUP (Optional)<div>
-                        <h4>Configure your outgoing SMTP email address to use with the software. You can configure your SMTP account later in MyCollab configuration file $\{MYCOLLAB_HOME}/conf/mycollab.properties</h4>
+                        <h4>Configure your outgoing SMTP email address to use with the software. You can configure your SMTP account later in MyCollab configuration file $\{MYCOLLAB_HOME}/conf/application.properties</h4>
                     </td>
                     <td style="display: inline-block; vertical-align: top; width:100%">
                         <form>
@@ -186,7 +186,7 @@ label {
                             </table>
                         </form>
                         <div class="right" style="margin-top: 10px;">
-                            <button id="validateEmailBtn" class="v-button v-button-greenbtn" type="button" onclick="return emailValidate();" style="width:140px"><span style="font-size: 15px;">Check Smtp</span></button>
+                            <button id="validateEmailBtn" class="v-button v-button-action-button" type="button" onclick="return emailValidate();" style="width:140px"><span style="font-size: 15px;">Check Smtp</span></button>
                             <button id="setupBtn" class="v-button v-button-orangebtn" type="button" onclick="return updateInfoAction();" style="width:140px"><span style="font-size: 15px;">Setup</span></button>
                         </div>
                     </td>
@@ -359,7 +359,7 @@ function updateInfoAction(){
     }
 
      $.ajax({
-          type: 'GET',
+          type: 'POST',
           url: urlPost,
           data : {
                     sitename : $('#sitename').val().trim(),
@@ -376,16 +376,21 @@ function updateInfoAction(){
                     ssl: sslStatus
                 },
           success: function(res) {
-             if (res!=null) {
-                if(res.length > 0) {
-                    $('#setupBtn').html('<span>Setup</span>');
-                    alert(res);
-                } else {
-                    window.location.assign(location.protocol + "//" + document.getElementById("serverAddress").value + ((location.port != "")? (":" + location.port) : ""));
-                }
-             }
+             setTimeout(function(){checkServerStarted();}, 10000)
           }
     });
+}
+
+function checkServerStarted() {
+  $.get("/checkStarted", function(checkRes) {
+    if (checkRes === "Started") {
+        window.location.assign(location.protocol + "//" + document.getElementById("serverAddress").value + ((location.port != "")? (":" + location.port) : ""));
+    } else {
+        setTimeout(function(){checkServerStarted();}, 5000);
+    }
+  }).fail(function(data) {
+      setTimeout(function(){checkServerStarted();}, 5000);
+  });
 }
 </script>
 </html>

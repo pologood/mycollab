@@ -1,32 +1,32 @@
 /**
- * This file is part of mycollab-scheduler-community.
- *
- * mycollab-scheduler-community is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-scheduler-community is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-scheduler-community.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.community.schedule.jobs;
 
-import com.mycollab.configuration.SiteConfiguration;
+import com.mycollab.configuration.ServerConfiguration;
 import com.mycollab.core.BroadcastMessage;
 import com.mycollab.core.Broadcaster;
-import com.mycollab.core.Version;
 import com.mycollab.core.NewUpdateAvailableNotification;
+import com.mycollab.core.Version;
 import com.mycollab.core.utils.JsonDeSerializer;
 import com.mycollab.schedule.jobs.GenericQuartzJobBean;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -41,6 +41,8 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.zip.ZipFile;
 
+import static com.mycollab.core.BroadcastMessage.SCOPE_GLOBAL;
+
 /**
  * @author MyCollab Ltd
  * @since 5.1.3
@@ -53,10 +55,13 @@ public class CheckUpdateJob extends GenericQuartzJobBean {
     private static boolean isDownloading = false;
     private static String latestFileDownloadedPath;
 
+    @Autowired
+    private ServerConfiguration serverConfiguration;
+
     @Override
-    public void executeJob(JobExecutionContext context) throws JobExecutionException {
+    public void executeJob(JobExecutionContext context) {
         RestTemplate restTemplate = new RestTemplate();
-        String result = restTemplate.getForObject(SiteConfiguration.getApiUrl("checkupdate?version=" + Version.getVersion()), String.class);
+        String result = restTemplate.getForObject(serverConfiguration.getApiUrl("checkupdate?version=" + Version.getVersion()), String.class);
         final Properties props = JsonDeSerializer.fromJson(result, Properties.class);
         String version = props.getProperty("version");
         if (Version.isEditionNewer(version)) {
@@ -68,7 +73,7 @@ public class CheckUpdateJob extends GenericQuartzJobBean {
                 if (latestFileDownloadedPath != null) {
                     File installerFile = new File(latestFileDownloadedPath);
                     if (installerFile.exists() && installerFile.getName().startsWith("mycollab" + version.replace('.', '_'))) {
-                        Broadcaster.broadcast(new BroadcastMessage(new NewUpdateAvailableNotification(version,
+                        Broadcaster.broadcast(new BroadcastMessage(SCOPE_GLOBAL, new NewUpdateAvailableNotification(version,
                                 autoDownloadLink, manualDownloadLink, latestFileDownloadedPath)));
                         return;
                     }
@@ -83,10 +88,10 @@ public class CheckUpdateJob extends GenericQuartzJobBean {
                         File installerFile = downloadMyCollabThread.tmpFile;
                         if (installerFile.exists() && installerFile.isFile() && installerFile.length() > 0 && isValid(installerFile)) {
                             latestFileDownloadedPath = installerFile.getAbsolutePath();
-                            Broadcaster.broadcast(new BroadcastMessage(new NewUpdateAvailableNotification(version,
+                            Broadcaster.broadcast(new BroadcastMessage(SCOPE_GLOBAL, new NewUpdateAvailableNotification(version,
                                     autoDownloadLink, manualDownloadLink, latestFileDownloadedPath)));
                         } else {
-                            Broadcaster.broadcast(new BroadcastMessage(new NewUpdateAvailableNotification(version, null,
+                            Broadcaster.broadcast(new BroadcastMessage(SCOPE_GLOBAL, new NewUpdateAvailableNotification(version, null,
                                     manualDownloadLink, null)));
                         }
                     } catch (Exception e) {
@@ -95,7 +100,7 @@ public class CheckUpdateJob extends GenericQuartzJobBean {
                         isDownloading = false;
                     }
                 } else {
-                    Broadcaster.broadcast(new BroadcastMessage(new NewUpdateAvailableNotification(version, autoDownloadLink,
+                    Broadcaster.broadcast(new BroadcastMessage(SCOPE_GLOBAL, new NewUpdateAvailableNotification(version, autoDownloadLink,
                             manualDownloadLink, latestFileDownloadedPath)));
                 }
             }

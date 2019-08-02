@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.ui.components;
 
@@ -21,8 +21,9 @@ import com.mycollab.common.domain.criteria.MonitorSearchCriteria;
 import com.mycollab.common.i18n.FollowerI18nEnum;
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.common.service.MonitorItemService;
-import com.mycollab.core.arguments.*;
+import com.mycollab.core.arguments.ValuedBean;
 import com.mycollab.core.utils.StringUtils;
+import com.mycollab.db.arguments.*;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectMemberStatusConstants;
 import com.mycollab.module.project.domain.SimpleProjectMember;
@@ -30,31 +31,28 @@ import com.mycollab.module.project.domain.criteria.ProjectMemberSearchCriteria;
 import com.mycollab.module.project.service.ProjectMemberService;
 import com.mycollab.module.user.CommonTooltipGenerator;
 import com.mycollab.module.user.domain.SimpleUser;
-import com.mycollab.db.arguments.*;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
-import com.mycollab.vaadin.UserUIContext;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.AsyncInvoker;
+import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ELabel;
 import com.mycollab.vaadin.ui.NotificationUtil;
-import com.mycollab.vaadin.ui.UIConstants;
 import com.mycollab.vaadin.ui.UserAvatarControlFactory;
 import com.mycollab.vaadin.web.ui.WebThemes;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.jouni.restrain.Restrain;
 import org.vaadin.viritin.layouts.MCssLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -95,7 +93,7 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
 
         MHorizontalLayout header = new MHorizontalLayout().withStyleName("info-hdr");
         header.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
-        Label followerHeader = new Label(FontAwesome.EYE.getHtml() + " " +
+        Label followerHeader = new Label(VaadinIcons.EYE.getHtml() + " " +
                 UserUIContext.getMessage(FollowerI18nEnum.OPT_SUB_INFO_WATCHERS), ContentMode.HTML);
         header.addComponent(followerHeader);
 
@@ -118,7 +116,7 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
             });
             header.addComponent(addPopupView);
         }
-        header.addComponent(ELabel.fontIcon(FontAwesome.QUESTION_CIRCLE).withStyleName(WebThemes.INLINE_HELP)
+        header.addComponent(ELabel.fontIcon(VaadinIcons.QUESTION_CIRCLE).withStyleName(WebThemes.INLINE_HELP)
                 .withDescription(UserUIContext.getMessage(FollowerI18nEnum.FOLLOWER_EXPLAIN_HELP)));
 
         this.addComponent(header);
@@ -134,9 +132,7 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
             public void run() {
                 watcherLayout.removeAllComponents();
                 followers = monitorItemService.getWatchers(type, typeId);
-                for (SimpleUser follower : followers) {
-                    watcherLayout.addComponent(new FollowerComp(follower));
-                }
+                followers.forEach(follower -> watcherLayout.addComponent(new FollowerComp(follower)));
             }
         });
     }
@@ -151,7 +147,7 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
             criteria.setTypeId(new NumberSearchField((Integer) PropertyUtils.getProperty(bean, "id")));
             criteria.setType(StringSearchField.and(type));
             criteria.setUser(StringSearchField.and(username));
-            monitorItemService.removeByCriteria(criteria, MyCollabUI.getAccountId());
+            monitorItemService.removeByCriteria(criteria, AppUI.getAccountId());
             for (SimpleUser user : followers) {
                 if (username.equals(user.getUsername())) {
                     followers.remove(user);
@@ -166,9 +162,9 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
     private class FollowerComp extends CssLayout {
         FollowerComp(final SimpleUser user) {
             final Image userAvatarBtn = UserAvatarControlFactory.createUserAvatarEmbeddedComponent(user.getAvatarid(), 32);
-            userAvatarBtn.addStyleName(UIConstants.CIRCLE_BOX);
+            userAvatarBtn.addStyleName(WebThemes.CIRCLE_BOX);
             userAvatarBtn.setDescription(CommonTooltipGenerator.generateTooltipUser(UserUIContext.getUserLocale(), user,
-                    MyCollabUI.getSiteUrl(), UserUIContext.getUserTimeZone()));
+                    AppUI.getSiteUrl(), UserUIContext.getUserTimeZone()));
             addComponent(userAvatarBtn);
             this.addStyleName("removeable-btn");
             this.setWidthUndefined();
@@ -189,15 +185,14 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
         private List<SimpleProjectMember> unsavedMembers = new ArrayList<>();
 
         ModifyWatcherPopup() {
-            new Restrain(this).setMaxHeight("600px");
             this.addStyleName(WebThemes.SCROLLABLE_CONTAINER);
             ProjectMemberSearchCriteria criteria = new ProjectMemberSearchCriteria();
-            criteria.setProjectId(new NumberSearchField(CurrentProjectVariables.getProjectId()));
+            criteria.setProjectIds(new SetSearchField<>(CurrentProjectVariables.getProjectId()));
             criteria.setStatuses(new SetSearchField<>(ProjectMemberStatusConstants.ACTIVE));
             criteria.addOrderField(new SearchCriteria.OrderField("memberFullName", SearchCriteria.ASC));
 
             ProjectMemberService projectMemberService = AppContextUtil.getSpringBean(ProjectMemberService.class);
-            projectMembers = projectMemberService.findPageableListByCriteria(new BasicSearchRequest<>(criteria));
+            projectMembers = (List<SimpleProjectMember>) projectMemberService.findPageableListByCriteria(new BasicSearchRequest<>(criteria));
             for (SimpleProjectMember member : projectMembers) {
                 this.addComponent(new FollowerRow(member));
             }
@@ -209,11 +204,11 @@ public class ProjectFollowersComp<V extends ValuedBean> extends MVerticalLayout 
             for (SimpleProjectMember member : unsavedMembers) {
                 MonitorItem item = new MonitorItem();
                 item.setExtratypeid(CurrentProjectVariables.getProjectId());
-                item.setMonitorDate(new GregorianCalendar().getTime());
-                item.setSaccountid(MyCollabUI.getAccountId());
+                item.setSaccountid(AppUI.getAccountId());
                 item.setType(type);
-                item.setTypeid(typeId);
-                item.setUser(member.getUsername());
+                item.setTypeid(typeId + "");
+                item.setUsername(member.getUsername());
+                item.setCreatedtime(LocalDateTime.now());
                 items.add(item);
             }
             return items;

@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.common.i18n;
 
@@ -28,13 +28,7 @@ import ch.qos.cal10n.LocaleData;
 @LocaleData(value = {@Locale("en-US")}, defaultCharset = "UTF-8")
 public enum DayI18nEnum {
     LAST_UPDATED_ON,
-    TIME_FORMAT,
-    HOUR_SUFFIX,
-    HOUR_PLURAL_SUFFIX,
-    MINUTE_SUFFIX,
-    MINUTE_PLURAL_SUFFIX,
-    SECOND_SUFFIX,
-    SECOND_PLURAL_SUFFIX,
+    DURATION,
 
     OPT_MONDAY,
     OPT_TUESDAY,
@@ -55,5 +49,6 @@ public enum DayI18nEnum {
     OPT_WEEKLY,
     OPT_MONTHLY,
 
-    OPT_NO_DATE_SET
+    OPT_NO_DATE_SET,
+    ERROR_INVALID_DATES
 }

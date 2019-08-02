@@ -7,6 +7,7 @@
         <result column="memberAvatarId" jdbcType="VARCHAR" property="memberAvatarId" />
         <result column="memberFullName" jdbcType="VARCHAR" property="memberFullName" />
         <result column="roleName" jdbcType="VARCHAR" property="roleName" />
+        <result column="permissionVal" jdbcType="VARCHAR" property="permissionVal" />
         <result column="numOpenTasks" jdbcType="INTEGER" property="numOpenTasks" />
         <result column="numOpenBugs" jdbcType="INTEGER" property="numOpenBugs" />
         <result column="projectName" jdbcType="VARCHAR" property="projectName" />
@@ -30,9 +31,12 @@
                 @{status}
             #end
         #end
-        
-        #ifnotnull($searchCriteria.projectId)
-            ${searchCriteria.projectId.operation} m_prj_member.projectId ${searchCriteria.projectId.compareOperator} @{searchCriteria.projectId.value,jdbcType=NUMERIC}
+
+        #ifnotnull($searchCriteria.projectIds)
+            ${searchCriteria.projectIds.operation} m_prj_member.projectId IN
+            #repeat(${searchCriteria.projectIds.values} $projectId "," "(" ")")
+                @{projectId}
+            #end
         #end
         
         #ifnotnull($searchCriteria.saccountid)
@@ -48,7 +52,7 @@
             EXISTS(
             SELECT 1 FROM s_user
                 WHERE m_prj_member.username=s_user.username
-                    AND concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) LIKE '%${searchCriteria.memberFullName.value}%'
+                    AND concat(s_user.firstname, ' ', s_user.lastname) LIKE '%${searchCriteria.memberFullName.value}%'
                 LIMIT 1
             )
         #end
@@ -72,8 +76,11 @@
             #end
         #end
         
-        #ifnotnull($searchCriteria.projectId)
-            ${searchCriteria.projectId.operation} m_prj_member.projectId ${searchCriteria.projectId.compareOperator} @{searchCriteria.projectId.value,jdbcType=NUMERIC}
+        #ifnotnull($searchCriteria.projectIds)
+            ${searchCriteria.projectIds.operation} m_prj_member.projectId IN
+            #repeat(${searchCriteria.projectIds.values} $projectId "," "(" ")")
+                @{projectId}
+            #end
         #end
         
         #ifnotnull($searchCriteria.saccountid)
@@ -93,7 +100,7 @@
             EXISTS(
             SELECT 1 FROM s_user
                 WHERE m_prj_member.username=s_user.username
-                    AND concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) LIKE '%${searchCriteria.memberFullName.value}%'
+                    AND concat(s_user.firstname, ' ', s_user.lastname) LIKE '%${searchCriteria.memberFullName.value}%'
                 LIMIT 1
             )
         #end
@@ -104,21 +111,22 @@
 
     <sql id="selectMember">
         <![CDATA[
-          SELECT m_prj_member.id, m_prj_member.username, m_prj_member.projectId, m_prj_member.joinDate,
-                 m_prj_member.isAdmin, m_prj_member.status, m_prj_member.sAccountId,
+          SELECT m_prj_member.id, m_prj_member.username, m_prj_member.projectId, m_prj_member.createdTime,
+                 m_prj_member.lastUpdatedTime, m_prj_member.status, m_prj_member.sAccountId,
                  m_prj_member.billingRate, m_prj_member.overtimeBillingRate, m_prj_project.name AS projectName,
-                 concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')), s_user.lastname) AS memberFullName,
-                 m_prj_role.rolename, s_user.email as email, s_user.avatarId AS memberAvatarId, m_prj_role.id as projectRoleId,
-                 (SELECT COUNT(*) FROM m_tracker_bug WHERE m_tracker_bug.assignUser=m_prj_member.username AND  m_tracker_bug.projectId=m_prj_member.projectId AND m_tracker_bug.status IN ('Open', 'InProgress', 'Reopenned')) AS numOpenBugs,
+                 concat(s_user.firstname, ' ', s_user.lastname) AS memberFullName,
+                 m_prj_role.rolename, m_prj_role_permission.roleVal as permissionVal, s_user.email as email, s_user.avatarId AS memberAvatarId, m_prj_role.id as projectRoleId,
+                 (SELECT COUNT(*) FROM m_prj_bug WHERE m_prj_bug.assignUser=m_prj_member.username AND  m_prj_bug.projectId=m_prj_member.projectId AND m_prj_bug.status IN ('Open', 'InProgress', 'Reopenned')) AS numOpenBugs,
                  (SELECT COUNT(*) FROM m_prj_task WHERE m_prj_task.assignUser=m_prj_member.username AND m_prj_task.projectId=m_prj_member.projectId AND m_prj_task.status='Open') AS numOpenTasks,
                  s_user_account.lastAccessedTime AS lastAccessTime,
-                  (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.loguser = m_prj_member.username AND m_prj_time_logging.isBillable=1) AS totalBillableLogTime,
-            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.loguser = m_prj_member.username AND m_prj_time_logging.isBillable=0) AS totalNonBillableLogTime
+                  (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.logUser = m_prj_member.username AND m_prj_time_logging.isBillable=1) AS totalBillableLogTime,
+            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.logUser = m_prj_member.username AND m_prj_time_logging.isBillable=0) AS totalNonBillableLogTime
             FROM m_prj_member
-              LEFT OUTER JOIN m_prj_project ON (m_prj_member.projectId = m_prj_project.id)
-              LEFT OUTER JOIN s_user ON (m_prj_member.username=s_user.username)
-              LEFT OUTER JOIN m_prj_role ON (m_prj_role.id=m_prj_member.projectRoleId)
-              LEFT OUTER JOIN s_user_account ON (s_user_account.accountId=m_prj_project.sAccountId AND s_user_account.username=s_user.username AND s_user_account.registerStatus <> 'Delete')
+              INNER JOIN m_prj_project ON (m_prj_member.projectId = m_prj_project.id)
+              INNER JOIN s_user ON (m_prj_member.username=s_user.username)
+              INNER JOIN m_prj_role ON (m_prj_role.id=m_prj_member.projectRoleId)
+              INNER JOIN m_prj_role_permission ON (m_prj_role.id=m_prj_role_permission.roleId)
+              INNER JOIN s_user_account ON (s_user_account.accountId=m_prj_project.sAccountId AND s_user_account.username=s_user.username AND s_user_account.registerStatus <> 'Delete')
         ]]>
     </sql>
     
@@ -129,10 +137,10 @@
                 ${orderField.field} ${orderField.direction},
             #end
         #end
-        m_prj_member.joinDate DESC
+        m_prj_member.createdTime DESC
     </sql>
 
-    <select id="getTotalCount" parameterType="ProjectMemberSearchCriteria"
+    <select id="getTotalCount" parameterType="com.mycollab.module.project.domain.criteria.ProjectMemberSearchCriteria"
         resultType="int" lang="velocity">
         SELECT count(*) as totalCount FROM m_prj_member
 
@@ -143,7 +151,7 @@
         #end
     </select>
 
-    <select id="findPageableListByCriteria" parameterType="ProjectMemberSearchCriteria" resultMap="ProjectMemberResult" lang="velocity">
+    <select id="findPageableListByCriteria" parameterType="com.mycollab.module.project.domain.criteria.ProjectMemberSearchCriteria" resultMap="ProjectMemberResult" lang="velocity">
         <include refid="selectMember" />
         #ifnotnull($_parameter.searchCriteria)
             #trimext("WHERE" "AND|OR")
@@ -161,19 +169,20 @@
     <select id="findMemberByUsername" parameterType="map" resultMap="ProjectMemberResult" lang="velocity">
         <![CDATA[
         SELECT m_prj_member.id, m_prj_member.username, m_prj_member.projectId,
-            m_prj_member.joinDate, m_prj_member.projectRoleId,
-            m_prj_member.isAdmin, m_prj_member.status, s_user.email as email,
+            m_prj_member.createdTime, m_prj_member.lastUpdatedTime, m_prj_member.projectRoleId,
+            m_prj_member.status, s_user.email as email,
             m_prj_member.billingRate, m_prj_member.overtimeBillingRate,
-            m_prj_role.rolename, m_prj_member.sAccountId,
-            concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')),  s_user.lastname) AS  memberFullName , s_user.avatarId AS memberAvatarId,
-            (SELECT COUNT(*) FROM m_tracker_bug WHERE m_tracker_bug.assignUser=m_prj_member.username AND  m_tracker_bug.projectId=m_prj_member.projectId AND m_tracker_bug.status IN ('Open', 'InProgress', 'Reopenned')) AS numOpenBugs,
+            m_prj_role.rolename, m_prj_role_permission.roleVal as permissionVal, m_prj_member.sAccountId,
+            concat(s_user.firstname, ' ', s_user.lastname) AS  memberFullName , s_user.avatarId AS memberAvatarId,
+            (SELECT COUNT(*) FROM m_prj_bug WHERE m_prj_bug.assignUser=m_prj_member.username AND  m_prj_bug.projectId=m_prj_member.projectId AND m_prj_bug.status IN ('Open', 'InProgress', 'Reopenned')) AS numOpenBugs,
             (SELECT COUNT(*) FROM m_prj_task WHERE m_prj_task.assignUser=m_prj_member.username AND m_prj_task.projectId=m_prj_member.projectId AND m_prj_task.status='Open') AS numOpenTasks,
             s_user_account.lastAccessedTime AS lastAccessTime, m_prj_project.name AS projectName,
-            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.loguser = m_prj_member.username AND m_prj_time_logging.isBillable=1) AS totalBillableLogTime,
-            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.loguser = m_prj_member.username AND m_prj_time_logging.isBillable=0) AS totalNonBillableLogTime
+            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.logUser = m_prj_member.username AND m_prj_time_logging.isBillable=1) AS totalBillableLogTime,
+            (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0) FROM m_prj_time_logging WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.logUser = m_prj_member.username AND m_prj_time_logging.isBillable=0) AS totalNonBillableLogTime
         FROM m_prj_member
         	INNER JOIN m_prj_project ON (m_prj_member.projectId = m_prj_project.id)
-	        LEFT OUTER JOIN m_prj_role ON (m_prj_role.id=m_prj_member.projectRoleId)
+	        INNER JOIN m_prj_role ON (m_prj_role.id=m_prj_member.projectRoleId)
+	        LEFT OUTER JOIN m_prj_role_permission ON (m_prj_role.id=m_prj_role_permission.roleId)
 	        INNER JOIN s_user ON (m_prj_member.username=s_user.username AND s_user.username=@{username})
 	        INNER JOIN s_user_account ON (s_user_account.accountId=m_prj_project.sAccountId AND s_user_account.username=s_user.username)
         WHERE m_prj_member.projectId=@{projectId, jdbcType=NUMERIC}
@@ -197,7 +206,7 @@
     </select>
     
     <select id="getActiveUsersInProjects" parameterType="map" resultMap="com.mycollab.module.user.dao.UserMapperExt.SimpleUserResult" lang="velocity">
-        SELECT DISTINCT s_user.username, s_user.firstname, s_user.lastname, s_user.email
+        SELECT DISTINCT s_user.username, s_user.firstname, s_user.lastname, s_user.email, s_user.status
         FROM s_user, s_user_account, m_prj_member
             WHERE s_user.username=s_user_account.username AND s_user_account.accountId=@{_parameter.sAccountId,jdbcType=NUMERIC}
             AND m_prj_member.username=s_user.username AND m_prj_member.projectId IN
@@ -211,7 +220,7 @@
         <![CDATA[
         SELECT DISTINCT s_user.username, s_user.firstname, s_user.lastname, s_user.email, 
                 s_user.website, s_user.registeredTime, s_user_account.registerStatus,
-                s_user_account.accountId, s_user.language, s_user.avatarid
+                s_user_account.accountId, s_user.language, s_user.avatarid, s_user.status
             FROM s_user, s_user_account
          WHERE s_user.username=s_user_account.username AND
                EXISTS (SELECT 1
@@ -229,18 +238,18 @@
             resultMap="com.mycollab.module.user.dao.UserMapperExt.SimpleUserResult" lang="velocity">
         <![CDATA[
         SELECT DISTINCT s_user.username, s_user.firstname, s_user.lastname, s_user.email,
-                s_user.website, s_user.registeredTime, s_user_account.registerStatus,
-                s_user_account.accountId, s_user.language, s_user.avatarid
-            FROM s_user, s_user_account
+            s_user.status, s_user.website, s_user.registeredTime, s_user_account.registerStatus,
+            s_user_account.accountId, s_user.language, s_user.avatarid
+        FROM s_user, s_user_account
         WHERE s_user.username=@{username} AND s_user.username=s_user_account.username AND
-             s_user_account.accountId=@{sAccountId} AND
-             EXISTS (SELECT 1
-                 FROM m_prj_member
-                 WHERE m_prj_member.username = s_user.username
-                     AND m_prj_member.status='Active'
-                     AND m_prj_member.projectId=@{projectId,jdbcType=NUMERIC}
-                     AND s_user_account.username=s_user.username
-                     LIMIT 1)
+            s_user_account.accountId=@{sAccountId} AND
+            EXISTS (SELECT 1
+                FROM m_prj_member
+                WHERE m_prj_member.username = s_user.username
+                    AND m_prj_member.status='Active'
+                    AND m_prj_member.projectId=@{projectId,jdbcType=NUMERIC}
+                    AND s_user_account.username=s_user.username
+                    LIMIT 1)
         ]]>
     </select>
 
@@ -263,22 +272,22 @@
     <select id="findMembersHourlyInProject" parameterType="map" resultMap="ProjectMemberResult" lang="velocity">
         <![CDATA[
         SELECT m_prj_member.id, m_prj_member.username, m_prj_member.projectId,
-            m_prj_member.joinDate, m_prj_member.projectRoleId,
-            m_prj_member.isAdmin, m_prj_member.status, s_user.email as email,
+            m_prj_member.createdTime, m_prj_member.lastUpdatedTime, m_prj_member.projectRoleId,
+            m_prj_member.status, s_user.email as email,
             m_prj_member.billingRate, m_prj_member.overtimeBillingRate,
             m_prj_role.rolename, m_prj_member.sAccountId,
-            concat(s_user.firstname, ' ', LTRIM(concat(IFNULL(s_user.middlename, ''), ' ')),  s_user.lastname) AS  memberFullName , s_user.avatarId AS memberAvatarId,
+            concat(s_user.firstname, ' ', s_user.lastname) AS  memberFullName , s_user.avatarId AS memberAvatarId,
             NULL AS numOpenBugs,
             NULL AS numOpenTasks,
             NULL AS lastAccessTime, m_prj_project.name AS projectName,
             (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0)
                 FROM m_prj_time_logging
                 WHERE m_prj_time_logging.projectId = m_prj_member.projectId
-                    AND m_prj_time_logging.loguser = m_prj_member.username AND m_prj_time_logging.isBillable=1
+                    AND m_prj_time_logging.logUser = m_prj_member.username AND m_prj_time_logging.isBillable=1
                     AND m_prj_time_logging.logForDay BETWEEN @{start} AND @{end}) AS totalBillableLogTime,
             (SELECT COALESCE(SUM(m_prj_time_logging.logValue), 0)
                 FROM m_prj_time_logging
-                WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.loguser = m_prj_member.username
+                WHERE m_prj_time_logging.projectId = m_prj_member.projectId AND m_prj_time_logging.logUser = m_prj_member.username
                     AND m_prj_time_logging.isBillable=0 AND m_prj_time_logging.logForDay BETWEEN @{start} AND @{end}) AS totalNonBillableLogTime
         FROM m_prj_member
             INNER JOIN s_user ON (m_prj_member.username=s_user.username)

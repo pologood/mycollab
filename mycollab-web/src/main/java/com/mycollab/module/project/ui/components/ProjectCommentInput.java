@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.ui.components;
 
@@ -23,23 +23,22 @@ import com.mycollab.module.file.AttachmentUtils;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.user.domain.SimpleUser;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ReloadableComponent;
 import com.mycollab.vaadin.web.ui.AttachmentPanel;
 import com.mycollab.vaadin.web.ui.WebThemes;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.RichTextArea;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.layouts.MCssLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
-import java.util.GregorianCalendar;
+import java.time.LocalDateTime;
 
 /**
  * @author MyCollab Ltd.
@@ -55,7 +54,7 @@ class ProjectCommentInput extends MHorizontalLayout {
     private Integer extraTypeId;
 
     ProjectCommentInput(final ReloadableComponent component, final String typeVal, Integer extraTypeIdVal) {
-        this.withMargin(new MarginInfo(true, true, false, false)).withFullWidth().withHeightUndefined();
+        this.withMargin(new MarginInfo(true, true, false, false)).withFullWidth().withUndefinedHeight();
 
         SimpleUser currentUser = UserUIContext.getUser();
         ProjectMemberBlock userBlock = new ProjectMemberBlock(currentUser.getUsername(), currentUser.getAvatarid(),
@@ -78,9 +77,9 @@ class ProjectCommentInput extends MHorizontalLayout {
         final MButton newCommentBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_POST), clickEvent -> {
             CommentWithBLOBs comment = new CommentWithBLOBs();
             comment.setComment(Jsoup.clean(commentArea.getValue(), Whitelist.relaxed()));
-            comment.setCreatedtime(new GregorianCalendar().getTime());
+            comment.setCreatedtime(LocalDateTime.now());
             comment.setCreateduser(UserUIContext.getUsername());
-            comment.setSaccountid(MyCollabUI.getAccountId());
+            comment.setSaccountid(AppUI.getAccountId());
             comment.setType(type);
             comment.setTypeid("" + typeId);
             comment.setExtratypeid(extraTypeId);
@@ -88,7 +87,7 @@ class ProjectCommentInput extends MHorizontalLayout {
             final CommentService commentService = AppContextUtil.getSpringBean(CommentService.class);
             int commentId = commentService.saveWithSession(comment, UserUIContext.getUsername());
 
-            String attachmentPath = AttachmentUtils.getCommentAttachmentPath(typeVal, MyCollabUI.getAccountId(),
+            String attachmentPath = AttachmentUtils.getCommentAttachmentPath(typeVal, AppUI.getAccountId(),
                     CurrentProjectVariables.getProjectId(), typeId, commentId);
 
             if (!"".equals(attachmentPath)) {
@@ -99,9 +98,9 @@ class ProjectCommentInput extends MHorizontalLayout {
             // comments again
             commentArea.setValue("");
             component.reload();
-        }).withStyleName(WebThemes.BUTTON_ACTION).withIcon(FontAwesome.SEND);
+        }).withStyleName(WebThemes.BUTTON_ACTION).withIcon(VaadinIcons.PAPERPLANE);
 
-        textAreaWrap.with(new MCssLayout(commentArea, attachments), newCommentBtn).withAlign(newCommentBtn, Alignment.TOP_RIGHT);
+        textAreaWrap.with(commentArea, attachments, newCommentBtn).withAlign(newCommentBtn, Alignment.TOP_RIGHT);
     }
 
     void setTypeAndId(final String typeId) {

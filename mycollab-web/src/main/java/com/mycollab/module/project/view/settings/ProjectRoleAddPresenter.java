@@ -1,24 +1,24 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package com.mycollab.module.project.view.settings;
 
 import com.mycollab.core.SecureAccessException;
-import com.mycollab.eventmanager.EventBusFactory;
+import com.mycollab.module.project.view.ProjectView;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.domain.ProjectRole;
@@ -27,9 +27,9 @@ import com.mycollab.module.project.event.ProjectRoleEvent;
 import com.mycollab.module.project.service.ProjectRoleService;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.IEditFormHandler;
+import com.mycollab.vaadin.event.IEditFormHandler;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.web.ui.AbstractPresenter;
@@ -72,10 +72,7 @@ public class ProjectRoleAddPresenter extends AbstractPresenter<ProjectRoleAddVie
 
     public void save(ProjectRole item) {
         ProjectRoleService roleService = AppContextUtil.getSpringBean(ProjectRoleService.class);
-        item.setSaccountid(MyCollabUI.getAccountId());
-
         SimpleProject project = CurrentProjectVariables.getProject();
-        item.setProjectid(project.getId());
 
         if (item.getId() == null) {
             roleService.saveWithSession(item, UserUIContext.getUsername());
@@ -83,26 +80,26 @@ public class ProjectRoleAddPresenter extends AbstractPresenter<ProjectRoleAddVie
             roleService.updateWithSession(item, UserUIContext.getUsername());
         }
 
-        roleService.savePermission(project.getId(), item.getId(), view.getPermissionMap(), MyCollabUI.getAccountId());
+        roleService.savePermission(project.getId(), item.getId(), view.getPermissionMap(), AppUI.getAccountId());
 
     }
 
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
         if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.ROLES)) {
-            ProjectRoleContainer roleContainer = (ProjectRoleContainer) container;
-            roleContainer.removeAllComponents();
-            roleContainer.addComponent(view);
+            ProjectView projectView = (ProjectView) container;
+            projectView.gotoSubView(ProjectView.ROLE_ENTRY, view);
 
             ProjectRole role = (ProjectRole) data.getParams();
-
-            view.editItem(role);
             ProjectBreadcrumb breadcrumb = ViewManager.getCacheComponent(ProjectBreadcrumb.class);
             if (role.getId() == null) {
+                role.setSaccountid(AppUI.getAccountId());
+                role.setProjectid(CurrentProjectVariables.getProject().getId());
                 breadcrumb.gotoRoleAdd();
             } else {
                 breadcrumb.gotoRoleEdit(role);
             }
+            view.editItem(role);
         } else {
             throw new SecureAccessException();
         }

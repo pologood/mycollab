@@ -1,23 +1,23 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.task;
 
+import com.google.common.collect.Sets;
 import com.mycollab.common.domain.OptionVal;
-import com.mycollab.common.i18n.OptionI18nEnum;
 import com.mycollab.common.i18n.QueryI18nEnum;
 import com.mycollab.common.service.OptionValService;
 import com.mycollab.db.arguments.SearchField;
@@ -28,14 +28,18 @@ import com.mycollab.module.project.domain.criteria.TaskSearchCriteria;
 import com.mycollab.module.project.i18n.TaskI18nEnum;
 import com.mycollab.module.project.query.CurrentProjectIdInjector;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.web.ui.SavedFilterComboBox;
-import org.joda.time.LocalDate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static com.mycollab.common.i18n.OptionI18nEnum.StatusI18nEnum;
+import static com.mycollab.common.i18n.QueryI18nEnum.BEFORE;
+import static com.mycollab.common.i18n.QueryI18nEnum.IS_NOT;
 
 /**
  * @author MyCollab Ltd
@@ -64,7 +68,7 @@ public class TaskSavedFilterComboBox extends SavedFilterComboBox {
                     public Object eval() {
                         OptionValService optionValService = AppContextUtil.getSpringBean(OptionValService.class);
                         List<OptionVal> options = optionValService.findOptionValsExcludeClosed(ProjectTypeConstants.TASK,
-                                CurrentProjectVariables.getProjectId(), MyCollabUI.getAccountId());
+                                CurrentProjectVariables.getProjectId(), AppUI.getAccountId());
                         List<String> statuses = new ArrayList<>();
                         for (OptionVal option : options) {
                             statuses.add(option.getTypeval());
@@ -89,19 +93,19 @@ public class TaskSavedFilterComboBox extends SavedFilterComboBox {
                 }));
 
         SearchQueryInfo overdueTaskQuery = new SearchQueryInfo(OVERDUE_TASKS, UserUIContext.getMessage(TaskI18nEnum.VAL_OVERDUE_TASKS),
-                new SearchFieldInfo(SearchField.AND, TaskSearchCriteria.p_duedate, DateParam.BEFORE, new LazyValueInjector() {
+                new SearchFieldInfo(SearchField.AND, TaskSearchCriteria.p_duedate, BEFORE.name(), new LazyValueInjector() {
                     @Override
                     protected Object doEval() {
-                        return new LocalDate().toDate();
+                        return LocalDate.now();
                     }
-                }), new SearchFieldInfo(SearchField.AND, new StringParam("id-status", "m_prj_task", "status"), QueryI18nEnum.StringI18nEnum.IS_NOT.name(),
-                ConstantValueInjector.valueOf(OptionI18nEnum.StatusI18nEnum.Closed.name())));
+                }), new SearchFieldInfo(SearchField.AND, new StringParam("id-status", "m_prj_task", "status"), IS_NOT.name(),
+                ConstantValueInjector.valueOf(StatusI18nEnum.Closed.name())));
 
         SearchQueryInfo myTasksQuery = new SearchQueryInfo(MY_TASKS, UserUIContext.getMessage(TaskI18nEnum.VAL_MY_TASKS),
-                SearchFieldInfo.inCollection(TaskSearchCriteria.p_assignee, ConstantValueInjector.valueOf(Collections.singletonList(UserUIContext.getUsername()))));
+                SearchFieldInfo.inCollection(TaskSearchCriteria.p_assignee, ConstantValueInjector.valueOf(Sets.newHashSet(UserUIContext.getUsername()))));
 
         SearchQueryInfo tasksCreatedByMeQuery = new SearchQueryInfo(TASKS_CREATED_BY_ME, UserUIContext.getMessage(TaskI18nEnum.VAL_TASKS_CREATED_BY_ME),
-                SearchFieldInfo.inCollection(TaskSearchCriteria.p_createdUser, ConstantValueInjector.valueOf(Collections.singletonList(UserUIContext.getUsername()))));
+                SearchFieldInfo.inCollection(TaskSearchCriteria.p_createdUser, ConstantValueInjector.valueOf(Sets.newHashSet(UserUIContext.getUsername()))));
 
         SearchQueryInfo newTasksThisWeekQuery = new SearchQueryInfo(NEW_TASKS_THIS_WEEK, UserUIContext.getMessage(TaskI18nEnum.VAL_NEW_THIS_WEEK),
                 SearchFieldInfo.inDateRange(TaskSearchCriteria.p_createtime, VariableInjector.THIS_WEEK));
@@ -130,5 +134,15 @@ public class TaskSavedFilterComboBox extends SavedFilterComboBox {
         componentsText.setReadOnly(false);
         componentsText.setValue(selectedQueryName + " (" + countNumber + ")");
         componentsText.setReadOnly(true);
+    }
+
+    @Override
+    protected void doSetValue(String s) {
+
+    }
+
+    @Override
+    public String getValue() {
+        return null;
     }
 }

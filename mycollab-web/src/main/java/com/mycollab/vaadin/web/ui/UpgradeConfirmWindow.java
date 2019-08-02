@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
@@ -21,13 +21,11 @@ import com.hp.gagawa.java.elements.Div;
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.common.i18n.ShellI18nEnum;
 import com.mycollab.core.IgnoreException;
-import com.mycollab.server.ServerInstance;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.core.utils.FileUtils;
+import com.mycollab.server.DefaultServerRunner;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ELabel;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +35,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 import org.vaadin.viritin.layouts.MWindow;
 
 import java.io.File;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.io.FileWriter;
 
 /**
  * @author MyCollab Ltd.
@@ -69,12 +66,12 @@ public class UpgradeConfirmWindow extends MWindow {
         content.with(ELabel.html(manualInstallLink.write()));
 
         Div manualUpgradeHowtoLink = new Div().appendText("&nbsp;&nbsp;&nbsp;&nbsp;" + UserUIContext.getMessage(ShellI18nEnum.OPT_MANUAL_UPGRADE) + ": ")
-                .appendChild(new A("https://community.mycollab.com/docs/hosting-mycollab-on-your-own-server/upgrade-mycollab-automatically/", "_blank").appendText("Link"));
-        content.with(new Label(manualUpgradeHowtoLink.write(), ContentMode.HTML));
+                .appendChild(new A("https://docs.mycollab.com/administration/upgrade-mycollab-automatically/", "_blank").appendText("Link"));
+        content.with(ELabel.html(manualUpgradeHowtoLink.write()));
 
         Div releaseNoteLink = new Div().appendText("&nbsp;&nbsp;&nbsp;&nbsp;" + UserUIContext.getMessage(ShellI18nEnum.OPT_RELEASE_NOTES) + ": ")
-                .appendChild(new A("https://community.mycollab.com/docs/hosting-mycollab-on-your-own-server/releases/", "_blank").appendText("Link"));
-        content.with(new Label(releaseNoteLink.write(), ContentMode.HTML));
+                .appendChild(new A("https://docs.mycollab.com/administration/hosting-mycollab-on-your-own-server/releases/", "_blank").appendText("Link"));
+        content.with(ELabel.html(releaseNoteLink.write()));
 
         MButton skipBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.ACTION_SKIP), clickEvent -> close())
                 .withStyleName(WebThemes.BUTTON_OPTION);
@@ -96,20 +93,10 @@ public class UpgradeConfirmWindow extends MWindow {
             final File installerFile = new File(installerFilePath);
             if (installerFile.exists()) {
                 new Thread(() -> {
-                    ServerInstance.getInstance().preUpgrade();
-                    final String locUrl = MyCollabUI.getSiteUrl() + "it/upgrade";
-                    Future<Void> access = currentUI.access(() -> {
-                        LOG.info("Redirect to the upgrade page " + locUrl);
-                        currentUI.getPage().setLocation(locUrl);
-                        currentUI.push();
-                    });
-
-                    try {
-                        access.get();
-                        TimeUnit.SECONDS.sleep(5);
-                        ServerInstance.getInstance().upgrade(installerFile);
+                    try (FileWriter writer = new FileWriter(new File(FileUtils.getUserFolder(), DefaultServerRunner.PID_FILE), false)) {
+                        writer.write("UPGRADE: " + installerFilePath);
                     } catch (Exception e) {
-                        LOG.error("Error while upgrade", e);
+                        LOG.error("Error when restart server", e);
                     }
                 }).start();
             }

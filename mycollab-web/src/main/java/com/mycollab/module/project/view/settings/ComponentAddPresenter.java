@@ -1,34 +1,34 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
-import com.mycollab.eventmanager.EventBusFactory;
+import com.mycollab.common.i18n.OptionI18nEnum.StatusI18nEnum;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
-import com.mycollab.module.project.domain.SimpleProject;
 import com.mycollab.module.project.event.BugComponentEvent;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
-import com.mycollab.module.project.view.bug.BugComponentContainer;
-import com.mycollab.module.tracker.domain.Component;
-import com.mycollab.module.tracker.service.ComponentService;
+import com.mycollab.module.project.view.ProjectView;
+import com.mycollab.module.project.domain.Component;
+import com.mycollab.module.project.service.ComponentService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.IEditFormHandler;
+import com.mycollab.vaadin.event.IEditFormHandler;
 import com.mycollab.vaadin.mvp.LoadPolicy;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
@@ -76,11 +76,6 @@ public class ComponentAddPresenter extends AbstractPresenter<ComponentAddView> {
     private void save(Component item) {
         ComponentService componentService = AppContextUtil.getSpringBean(ComponentService.class);
 
-        SimpleProject project = CurrentProjectVariables.getProject();
-        item.setSaccountid(MyCollabUI.getAccountId());
-        item.setProjectid(project.getId());
-        item.setStatus("Open");
-
         if (item.getId() == null) {
             item.setCreateduser(UserUIContext.getUsername());
             componentService.saveWithSession(item, UserUIContext.getUsername());
@@ -92,20 +87,21 @@ public class ComponentAddPresenter extends AbstractPresenter<ComponentAddView> {
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
         if (CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.COMPONENTS)) {
-            BugComponentContainer componentContainer = (BugComponentContainer) container;
-            componentContainer.removeAllComponents();
-            componentContainer.addComponent(view);
+            ProjectView projectView = (ProjectView) container;
+            projectView.gotoSubView(ProjectView.COMPONENT_ENTRY, view);
 
             Component component = (Component) data.getParams();
-            view.editItem(component);
-
             ProjectBreadcrumb breadcrumb = ViewManager.getCacheComponent(ProjectBreadcrumb.class);
 
             if (component.getId() == null) {
+                component.setSaccountid(AppUI.getAccountId());
+                component.setProjectid(CurrentProjectVariables.getProject().getId());
+                component.setStatus(StatusI18nEnum.Open.name());
                 breadcrumb.gotoComponentAdd();
             } else {
                 breadcrumb.gotoComponentEdit(component);
             }
+            view.editItem(component);
         } else {
             NotificationUtil.showMessagePermissionAlert();
         }

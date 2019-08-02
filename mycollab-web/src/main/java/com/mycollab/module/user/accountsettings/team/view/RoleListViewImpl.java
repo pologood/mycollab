@@ -1,31 +1,31 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.user.accountsettings.team.view;
 
 import com.mycollab.common.i18n.GenericI18Enum;
-import com.mycollab.module.user.accountsettings.view.RoleTableFieldDef;
+import com.mycollab.module.user.accountsettings.fielddef.RoleTableFieldDef;
 import com.mycollab.module.user.domain.SimpleRole;
 import com.mycollab.module.user.domain.criteria.RoleSearchCriteria;
 import com.mycollab.security.RolePermissionCollections;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.HasMassItemActionHandler;
-import com.mycollab.vaadin.events.HasSearchHandlers;
-import com.mycollab.vaadin.events.HasSelectableItemHandlers;
-import com.mycollab.vaadin.events.HasSelectionOptionHandlers;
+import com.mycollab.vaadin.event.HasMassItemActionHandler;
+import com.mycollab.vaadin.event.HasSearchHandlers;
+import com.mycollab.vaadin.event.HasSelectableItemHandlers;
+import com.mycollab.vaadin.event.HasSelectionOptionHandlers;
 import com.mycollab.vaadin.mvp.AbstractVerticalPageView;
 import com.mycollab.vaadin.mvp.ViewComponent;
 import com.mycollab.vaadin.ui.DefaultMassItemActionHandlerContainer;
@@ -33,9 +33,13 @@ import com.mycollab.vaadin.web.ui.SelectionOptionButton;
 import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.table.AbstractPagedBeanTable;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
 import org.vaadin.viritin.layouts.MCssLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 import java.util.Arrays;
 
@@ -58,14 +62,15 @@ public class RoleListViewImpl extends AbstractVerticalPageView implements RoleLi
         this.setMargin(new MarginInfo(false, true, false, true));
 
         searchPanel = new RoleSearchPanel();
-        listLayout = new VerticalLayout();
+        listLayout = new MVerticalLayout().withSpacing(false).withMargin(false);
         this.with(searchPanel, listLayout);
         this.generateDisplayTable();
     }
 
     private void generateDisplayTable() {
-        tableItem = new RoleTableDisplay(RoleTableFieldDef.selected(), Arrays.asList(
-                RoleTableFieldDef.rolename(), RoleTableFieldDef.isDefault(), RoleTableFieldDef.description()));
+        tableItem = new RoleTableDisplay(RoleTableFieldDef.selected,
+                Arrays.asList(RoleTableFieldDef.rolename, RoleTableFieldDef.members,
+                        RoleTableFieldDef.isDefault, RoleTableFieldDef.description));
         listLayout.addComponent(constructTableActionControls());
         listLayout.addComponent(tableItem);
     }
@@ -95,7 +100,7 @@ public class RoleListViewImpl extends AbstractVerticalPageView implements RoleLi
     }
 
     @Override
-    public void enableActionControls(final int numOfSelectedItems) {
+    public void enableActionControls(int numOfSelectedItems) {
         tableActionControls.setVisible(true);
         selectedItemsNumberLabel.setValue(UserUIContext.getMessage(GenericI18Enum.TABLE_SELECTED_ITEM_TITLE, numOfSelectedItems));
     }
@@ -128,7 +133,7 @@ public class RoleListViewImpl extends AbstractVerticalPageView implements RoleLi
     }
 
     @Override
-    public AbstractPagedBeanTable<RoleSearchCriteria, SimpleRole> getPagedBeanTable() {
+    public AbstractPagedBeanTable<RoleSearchCriteria, SimpleRole> getPagedBeanGrid() {
         return this.tableItem;
     }
 }

@@ -1,58 +1,59 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.user.accountsettings.customize.view;
 
 import com.mycollab.common.i18n.FileI18nEnum;
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.common.i18n.ShellI18nEnum;
+import com.mycollab.configuration.ServerConfiguration;
 import com.mycollab.configuration.SiteConfiguration;
-import com.mycollab.configuration.StorageFactory;
 import com.mycollab.core.MyCollabException;
 import com.mycollab.core.UserInvalidInputException;
 import com.mycollab.core.utils.DateTimeUtils;
 import com.mycollab.core.utils.ImageUtil;
 import com.mycollab.core.utils.TimezoneVal;
+import com.mycollab.form.view.LayoutType;
 import com.mycollab.i18n.LocalizationHelper;
+import com.mycollab.module.file.StorageUtils;
 import com.mycollab.module.file.service.AccountFavIconService;
 import com.mycollab.module.user.accountsettings.localization.AdminI18nEnum;
 import com.mycollab.module.user.domain.SimpleBillingAccount;
 import com.mycollab.module.user.service.BillingAccountService;
 import com.mycollab.security.RolePermissionCollections;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.mvp.AbstractVerticalPageView;
 import com.mycollab.vaadin.mvp.ViewComponent;
 import com.mycollab.vaadin.ui.AccountAssetsResolver;
 import com.mycollab.vaadin.ui.ELabel;
 import com.mycollab.vaadin.ui.FormContainer;
-import com.mycollab.vaadin.ui.UIConstants;
+import com.mycollab.vaadin.ui.UIUtils;
 import com.mycollab.vaadin.web.ui.ServiceMenu;
 import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.grid.GridFormLayoutHelper;
 import com.mycollab.web.CustomLayoutExt;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.BrowserWindowOpener;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.easyuploads.UploadField;
-import org.vaadin.teemu.VaadinIcons;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
@@ -61,9 +62,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Currency;
-import java.util.Date;
-import java.util.GregorianCalendar;
 
 /**
  * @author MyCollab Ltd
@@ -81,19 +81,19 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
     public void displayView() {
         removeAllComponents();
 
-        billingAccount = MyCollabUI.getBillingAccount();
+        billingAccount = AppUI.getBillingAccount();
         FormContainer formContainer = new FormContainer();
         this.addComponent(formContainer);
 
         MHorizontalLayout generalSettingHeader = new MHorizontalLayout();
-        Label headerLbl = new Label(UserUIContext.getMessage(AdminI18nEnum.OPT_GENERAL_SETTINGS));
+        ELabel headerLbl = new ELabel(UserUIContext.getMessage(AdminI18nEnum.OPT_GENERAL_SETTINGS)).withStyleName(WebThemes.BUTTON_LINK, ValoTheme.LABEL_H3, ValoTheme.LABEL_NO_MARGIN);
 
         MButton editBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_EDIT), clickEvent -> UI.getCurrent().addWindow(new AccountInfoChangeWindow()))
                 .withStyleName(WebThemes.BUTTON_LINK);
 
         generalSettingHeader.with(headerLbl, editBtn).alignAll(Alignment.MIDDLE_LEFT);
 
-        GridFormLayoutHelper gridFormLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(2, 5, "200px");
+        GridFormLayoutHelper gridFormLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(LayoutType.TWO_COLUMN);
         gridFormLayoutHelper.addComponent(new Label(billingAccount.getSitename()),
                 UserUIContext.getMessage(AdminI18nEnum.FORM_SITE_NAME), 0, 0);
         gridFormLayoutHelper.addComponent(new Label(String.format("https://%s.mycollab.com", billingAccount
@@ -104,7 +104,7 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
         gridFormLayoutHelper.addComponent(new ELabel(defaultCurrency.getDisplayName(UserUIContext.getUserLocale())),
                 UserUIContext.getMessage(AdminI18nEnum.FORM_DEFAULT_CURRENCY), 0, 3);
 
-        Date now = new GregorianCalendar().getTime();
+        LocalDateTime now = LocalDateTime.now();
         String defaultFullDateFormat = billingAccount.getDateFormatInstance();
         gridFormLayoutHelper.addComponent(new Label(String.format("%s (%s)",
                 DateTimeUtils.formatDate(now, billingAccount.getDateFormatInstance(), UserUIContext.getUserLocale()), defaultFullDateFormat)),
@@ -129,7 +129,7 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
 
         gridFormLayoutHelper.addComponent(new Label(UserUIContext.getMessage(LocalizationHelper.localizeYesNo(billingAccount.getDisplayemailpublicly()))),
                 UserUIContext.getMessage(AdminI18nEnum.FORM_SHOW_EMAIL_PUBLICLY),
-                UserUIContext.getMessage(AdminI18nEnum.FORM_SHOW_EMAIL_PUBLICLY_HELP), 0, 4, 2, "100%");
+                UserUIContext.getMessage(AdminI18nEnum.FORM_SHOW_EMAIL_PUBLICLY_HELP), 0, 4, 2);
 
 
         formContainer.addSection(new CssLayout(generalSettingHeader), gridFormLayoutHelper.getLayout());
@@ -144,9 +144,9 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
 
     private void buildLogoPanel() {
         FormContainer formContainer = new FormContainer();
-        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(true);
+        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(new MarginInfo(true, false, true, false));
         MVerticalLayout leftPanel = new MVerticalLayout().withMargin(false);
-        Label logoDesc = new Label(UserUIContext.getMessage(AdminI18nEnum.OPT_LOGO_FORMAT_DESCRIPTION));
+        ELabel logoDesc = ELabel.html(UserUIContext.getMessage(AdminI18nEnum.OPT_LOGO_FORMAT_DESCRIPTION)).withFullWidth();
         leftPanel.with(logoDesc).withWidth("250px");
 
         MVerticalLayout rightPanel = new MVerticalLayout().withMargin(false);
@@ -187,8 +187,8 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void updateDisplay() {
-                byte[] imageData = (byte[]) this.getValue();
+            protected void updateDisplayComponent() {
+                byte[] imageData = this.getValue();
                 String mimeType = this.getLastMimeType();
                 if (mimeType.equals("image/jpeg")) {
                     imageData = ImageUtil.convertJpgToPngFormat(imageData);
@@ -209,14 +209,13 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
         logoUploadField.setButtonCaption(UserUIContext.getMessage(GenericI18Enum.ACTION_CHANGE));
         logoUploadField.addStyleName("upload-field");
         logoUploadField.setSizeUndefined();
-        logoUploadField.setFieldType(UploadField.FieldType.BYTE_ARRAY);
         logoUploadField.setVisible(UserUIContext.canBeYes(RolePermissionCollections.ACCOUNT_THEME));
 
         MButton resetButton = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_RESET), clickEvent -> {
             BillingAccountService billingAccountService = AppContextUtil.getSpringBean(BillingAccountService.class);
             billingAccount.setLogopath(null);
             billingAccountService.updateWithSession(billingAccount, UserUIContext.getUsername());
-            Page.getCurrent().getJavaScript().execute("window.location.reload();");
+            UIUtils.reloadPage();
         }).withStyleName(WebThemes.BUTTON_OPTION);
         resetButton.setVisible(UserUIContext.canBeYes(RolePermissionCollections.ACCOUNT_THEME));
 
@@ -229,12 +228,12 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
 
     private void buildShortcutIconPanel() {
         FormContainer formContainer = new FormContainer();
-        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(new MarginInfo(true));
+        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(new MarginInfo(true, false, true, false));
         MVerticalLayout leftPanel = new MVerticalLayout().withMargin(false);
-        Label logoDesc = new Label(UserUIContext.getMessage(FileI18nEnum.OPT_FAVICON_FORMAT_DESCRIPTION));
+        ELabel logoDesc = ELabel.html(UserUIContext.getMessage(FileI18nEnum.OPT_FAVICON_FORMAT_DESCRIPTION)).withFullWidth();
         leftPanel.with(logoDesc).withWidth("250px");
         MVerticalLayout rightPanel = new MVerticalLayout().withMargin(false);
-        final Image favIconRes = new Image("", new ExternalResource(StorageFactory.getFavIconPath(billingAccount.getId(),
+        final Image favIconRes = new Image("", new ExternalResource(StorageUtils.getFavIconPath(billingAccount.getId(),
                 billingAccount.getFaviconpath())));
 
         MHorizontalLayout buttonControls = new MHorizontalLayout().withMargin(new MarginInfo(true, false, false, false));
@@ -243,8 +242,8 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void updateDisplay() {
-                byte[] imageData = (byte[]) this.getValue();
+            protected void updateDisplayComponent() {
+                byte[] imageData = this.getValue();
                 String mimeType = this.getLastMimeType();
                 if (mimeType.equals("image/jpeg")) {
                     imageData = ImageUtil.convertJpgToPngFormat(imageData);
@@ -259,11 +258,10 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
                     try {
                         AccountFavIconService favIconService = AppContextUtil.getSpringBean(AccountFavIconService.class);
                         BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
-                        String newFavIconPath = favIconService.upload(UserUIContext.getUsername(), image, MyCollabUI
-                                .getAccountId());
-                        favIconRes.setSource(new ExternalResource(StorageFactory.getFavIconPath(billingAccount.getId(),
+                        String newFavIconPath = favIconService.upload(UserUIContext.getUsername(), image, AppUI.getAccountId());
+                        favIconRes.setSource(new ExternalResource(StorageUtils.getFavIconPath(billingAccount.getId(),
                                 newFavIconPath)));
-                        Page.getCurrent().getJavaScript().execute("window.location.reload();");
+                        UIUtils.reloadPage();
                     } catch (IOException e) {
                         throw new MyCollabException(e);
                     }
@@ -275,14 +273,13 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
         favIconUploadField.setButtonCaption(UserUIContext.getMessage(GenericI18Enum.ACTION_CHANGE));
         favIconUploadField.addStyleName("upload-field");
         favIconUploadField.setSizeUndefined();
-        favIconUploadField.setFieldType(UploadField.FieldType.BYTE_ARRAY);
         favIconUploadField.setVisible(UserUIContext.canBeYes(RolePermissionCollections.ACCOUNT_THEME));
 
         MButton resetButton = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_RESET), clickEvent -> {
             BillingAccountService billingAccountService = AppContextUtil.getSpringBean(BillingAccountService.class);
             billingAccount.setFaviconpath(null);
             billingAccountService.updateWithSession(billingAccount, UserUIContext.getUsername());
-            Page.getCurrent().getJavaScript().execute("window.location.reload();");
+            UIUtils.reloadPage();
         }).withStyleName(WebThemes.BUTTON_OPTION);
         resetButton.setVisible(UserUIContext.canBeYes(RolePermissionCollections.ACCOUNT_THEME));
 
@@ -295,17 +292,18 @@ public class GeneralSettingViewImpl extends AbstractVerticalPageView implements 
 
     private void buildLanguageUpdatePanel() {
         FormContainer formContainer = new FormContainer();
-        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(new MarginInfo(true));
+        MHorizontalLayout layout = new MHorizontalLayout().withFullWidth().withMargin(new MarginInfo(true, false, true, false));
         MVerticalLayout leftPanel = new MVerticalLayout().withMargin(false);
-        Label logoDesc = new Label(UserUIContext.getMessage(ShellI18nEnum.OPT_LANGUAGE_DOWNLOAD));
-        leftPanel.with(logoDesc).withWidth("250px");
+        ELabel languageDownloadDesc = ELabel.html(UserUIContext.getMessage(ShellI18nEnum.OPT_LANGUAGE_DOWNLOAD)).withFullWidth();
+        leftPanel.with(languageDownloadDesc).withWidth("250px");
         MVerticalLayout rightPanel = new MVerticalLayout().withMargin(false);
         MButton downloadBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_DOWNLOAD))
-                .withStyleName(WebThemes.BUTTON_ACTION).withIcon(FontAwesome.DOWNLOAD);
-        BrowserWindowOpener opener = new BrowserWindowOpener(SiteConfiguration.getApiUrl("localization/translations"));
+                .withStyleName(WebThemes.BUTTON_ACTION).withIcon(VaadinIcons.DOWNLOAD);
+        ServerConfiguration serverConfiguration = AppContextUtil.getSpringBean(ServerConfiguration.class);
+        BrowserWindowOpener opener = new BrowserWindowOpener(serverConfiguration.getApiUrl("localization/translations"));
         opener.extend(downloadBtn);
-        rightPanel.with(downloadBtn, new ELabel(UserUIContext.getMessage(ShellI18nEnum
-                .OPT_UPDATE_LANGUAGE_INSTRUCTION)).withStyleName(UIConstants.META_INFO));
+        rightPanel.with(downloadBtn, new ELabel(UserUIContext.getMessage(ShellI18nEnum.OPT_UPDATE_LANGUAGE_INSTRUCTION))
+                .withStyleName(WebThemes.META_INFO).withFullWidth());
         layout.with(leftPanel, rightPanel).expand(rightPanel);
         formContainer.addSection("Languages", layout);
         this.with(formContainer);

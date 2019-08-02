@@ -1,29 +1,28 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.ticket;
 
+import com.google.common.collect.Sets;
 import com.mycollab.common.i18n.GenericI18Enum;
-import com.mycollab.common.i18n.QueryI18nEnum;
 import com.mycollab.db.arguments.SearchField;
 import com.mycollab.db.arguments.SetSearchField;
 import com.mycollab.db.query.ConstantValueInjector;
 import com.mycollab.db.query.Param;
 import com.mycollab.db.query.SearchFieldInfo;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectTypeConstants;
 import com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria;
@@ -31,12 +30,13 @@ import com.mycollab.module.project.event.TicketEvent;
 import com.mycollab.module.project.ui.ProjectAssetsManager;
 import com.mycollab.module.project.view.milestone.MilestoneListSelect;
 import com.mycollab.module.project.view.settings.component.ProjectMemberListSelect;
-import com.mycollab.shell.events.ShellEvent;
+import com.mycollab.shell.event.ShellEvent;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.ELabel;
 import com.mycollab.vaadin.web.ui.*;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.*;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MTextField;
@@ -45,6 +45,9 @@ import org.vaadin.viritin.layouts.MHorizontalLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static com.mycollab.common.i18n.QueryI18nEnum.CONTAINS;
+import static com.mycollab.common.i18n.QueryI18nEnum.IN;
 
 /**
  * @author MyCollab Ltd
@@ -57,7 +60,7 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
     private TicketSavedFilterComboBox savedFilterComboBox;
 
     private static Param[] paramFields = new Param[]{
-            ProjectTicketSearchCriteria.p_type,
+            ProjectTicketSearchCriteria.p_types,
             ProjectTicketSearchCriteria.p_name, ProjectTicketSearchCriteria.p_priority,
             ProjectTicketSearchCriteria.p_milestones, ProjectTicketSearchCriteria.p_startDate,
             ProjectTicketSearchCriteria.p_endDate, ProjectTicketSearchCriteria.p_dueDate,
@@ -67,22 +70,17 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
     protected ComponentContainer buildSearchTitle() {
         if (canSwitchToAdvanceLayout) {
             savedFilterComboBox = new TicketSavedFilterComboBox();
-            savedFilterComboBox.addQuerySelectListener(new SavedFilterComboBox.QuerySelectListener() {
-                @Override
-                public void querySelect(SavedFilterComboBox.QuerySelectEvent querySelectEvent) {
-                    List<SearchFieldInfo> fieldInfos = querySelectEvent.getSearchFieldInfos();
-                    ProjectTicketSearchCriteria criteria = SearchFieldInfo.buildSearchCriteria(ProjectTicketSearchCriteria.class,
-                            fieldInfos);
-                    criteria.setProjectIds(new SetSearchField<>(CurrentProjectVariables.getProjectId()));
-                    EventBusFactory.getInstance().post(new TicketEvent.SearchRequest(TicketSearchPanel.this, criteria));
-                    EventBusFactory.getInstance().post(new ShellEvent.AddQueryParam(this, fieldInfos));
-                }
+            savedFilterComboBox.addQuerySelectListener((SavedFilterComboBox.QuerySelectListener) querySelectEvent -> {
+                List<SearchFieldInfo<ProjectTicketSearchCriteria>> fieldInfos = querySelectEvent.getSearchFieldInfos();
+                ProjectTicketSearchCriteria criteria = SearchFieldInfo.buildSearchCriteria(ProjectTicketSearchCriteria.class,
+                        fieldInfos);
+                criteria.setProjectIds(new SetSearchField<>(CurrentProjectVariables.getProjectId()));
+                EventBusFactory.getInstance().post(new TicketEvent.SearchRequest(TicketSearchPanel.this, criteria));
+//                    EventBusFactory.getInstance().post(new ShellEvent.AddQueryParam(this, fieldInfos));
             });
-            ELabel taskIcon = ELabel.h2(ProjectAssetsManager.getAsset(ProjectTypeConstants.TICKET).getHtml()).withWidthUndefined();
-            return new MHorizontalLayout(taskIcon, savedFilterComboBox).expand(savedFilterComboBox).alignAll(Alignment.MIDDLE_LEFT);
-        } else {
-            return null;
-        }
+            ELabel taskIcon = ELabel.h2(ProjectAssetsManager.getAsset(ProjectTypeConstants.TICKET).getHtml()).withUndefinedWidth();
+            return new MHorizontalLayout(taskIcon, savedFilterComboBox).withUndefinedWidth();
+        } else return null;
     }
 
     @Override
@@ -100,13 +98,7 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
         return new TicketAdvancedSearchLayout();
     }
 
-    public void setTextField(String name) {
-        if (getCompositionRoot() instanceof TicketBasicSearchLayout) {
-            ((TicketBasicSearchLayout) getCompositionRoot()).setNameField(name);
-        }
-    }
-
-    public void displaySearchFieldInfos(List<SearchFieldInfo> searchFieldInfos) {
+    void displaySearchFieldInfos(List<SearchFieldInfo<ProjectTicketSearchCriteria>> searchFieldInfos) {
         if (canSwitchToAdvanceLayout) {
             TicketAdvancedSearchLayout advancedSearchLayout = (TicketAdvancedSearchLayout) moveToAdvancedSearchLayout();
             advancedSearchLayout.displaySearchFieldInfos(searchFieldInfos);
@@ -137,7 +129,7 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
             Label nameLbl = new Label(UserUIContext.getMessage(GenericI18Enum.FORM_NAME) + ":");
             basicSearchBody.with(nameLbl).withAlign(nameLbl, Alignment.MIDDLE_LEFT);
 
-            nameField = new MTextField().withInputPrompt(UserUIContext.getMessage(GenericI18Enum.ACTION_QUERY_BY_TEXT))
+            nameField = new MTextField().withPlaceholder(UserUIContext.getMessage(GenericI18Enum.ACTION_QUERY_BY_TEXT))
                     .withWidth(WebUIConstants.DEFAULT_CONTROL_WIDTH);
             basicSearchBody.with(nameField).withAlign(nameField, Alignment.MIDDLE_CENTER);
 
@@ -145,7 +137,7 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
             basicSearchBody.with(myItemCheckbox).withAlign(myItemCheckbox, Alignment.MIDDLE_CENTER);
 
             MButton searchBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_SEARCH), clickEvent -> callSearchAction())
-                    .withIcon(FontAwesome.SEARCH).withStyleName(WebThemes.BUTTON_ACTION)
+                    .withIcon(VaadinIcons.SEARCH).withStyleName(WebThemes.BUTTON_ACTION)
                     .withClickShortcut(ShortcutAction.KeyCode.ENTER);
             basicSearchBody.with(searchBtn).withAlign(searchBtn, Alignment.MIDDLE_LEFT);
 
@@ -163,14 +155,12 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
 
         @Override
         protected ProjectTicketSearchCriteria fillUpSearchCriteria() {
-            List<SearchFieldInfo> searchFieldInfos = new ArrayList<>();
+            List<SearchFieldInfo<ProjectTicketSearchCriteria>> searchFieldInfos = new ArrayList<>();
             searchFieldInfos.add(new SearchFieldInfo(SearchField.AND, ProjectTicketSearchCriteria.p_name,
-                    QueryI18nEnum.StringI18nEnum.CONTAINS.name(),
-                    ConstantValueInjector.valueOf(nameField.getValue().trim())));
+                    CONTAINS.name(), ConstantValueInjector.valueOf(nameField.getValue().trim())));
             if (myItemCheckbox.getValue()) {
                 searchFieldInfos.add(new SearchFieldInfo(SearchField.AND, ProjectTicketSearchCriteria.p_assignee,
-                        QueryI18nEnum.CollectionI18nEnum.IN.name(),
-                        ConstantValueInjector.valueOf(Collections.singletonList(UserUIContext.getUsername()))));
+                        IN.name(), ConstantValueInjector.valueOf(Sets.newHashSet(UserUIContext.getUsername()))));
             }
             EventBusFactory.getInstance().post(new ShellEvent.AddQueryParam(this, searchFieldInfos));
             searchCriteria = SearchFieldInfo.buildSearchCriteria(ProjectTicketSearchCriteria.class, searchFieldInfos);
@@ -199,7 +189,7 @@ public class TicketSearchPanel extends DefaultGenericSearchPanel<ProjectTicketSe
         @Override
         protected Component buildSelectionComp(String fieldId) {
             if ("assignuser".equals(fieldId) || "createduser".equals(fieldId)) {
-                return new ProjectMemberListSelect(false);
+                return new ProjectMemberListSelect(false, Collections.singletonList(CurrentProjectVariables.getProjectId()));
             } else if ("milestone".equals(fieldId)) {
                 return new MilestoneListSelect();
             } else if ("type".equals(fieldId)) {

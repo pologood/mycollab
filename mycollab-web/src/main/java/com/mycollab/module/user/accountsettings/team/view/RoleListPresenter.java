@@ -1,34 +1,36 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.user.accountsettings.team.view;
 
 import com.mycollab.db.persistence.service.ISearchableService;
 import com.mycollab.module.user.accountsettings.localization.RoleI18nEnum;
+import com.mycollab.module.user.accountsettings.view.AccountModule;
 import com.mycollab.module.user.accountsettings.view.AccountSettingBreadcrumb;
 import com.mycollab.module.user.domain.Role;
 import com.mycollab.module.user.domain.SimpleRole;
 import com.mycollab.module.user.domain.criteria.RoleSearchCriteria;
 import com.mycollab.module.user.service.RoleService;
+import com.mycollab.module.user.ui.SettingUIConstants;
 import com.mycollab.security.AccessPermissionFlag;
 import com.mycollab.security.RolePermissionCollections;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.ViewItemAction;
+import com.mycollab.vaadin.event.ViewItemAction;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.mvp.ViewPermission;
@@ -65,7 +67,7 @@ public class RoleListPresenter extends ListSelectionPresenter<RoleListView, Role
         view.getPopupActionHandlers().setMassActionHandler(new DefaultMassEditActionHandler(this) {
             @Override
             protected void onSelectExtra(String id) {
-                if (ViewItemAction.MAIL_ACTION().equals(id)) {
+                if (ViewItemAction.MAIL_ACTION.equals(id)) {
                     UI.getCurrent().addWindow(new MailFormWindow());
                 }
             }
@@ -85,7 +87,7 @@ public class RoleListPresenter extends ListSelectionPresenter<RoleListView, Role
     @Override
     protected void deleteSelectedItems() {
         if (!isSelectAll) {
-            Collection<SimpleRole> currentDataList = view.getPagedBeanTable().getCurrentDataList();
+            Collection<SimpleRole> currentDataList = view.getPagedBeanGrid().getItems();
             List<Role> keyList = new ArrayList<>();
             for (SimpleRole item : currentDataList) {
                 if (item.isSelected()) {
@@ -99,11 +101,11 @@ public class RoleListPresenter extends ListSelectionPresenter<RoleListView, Role
             }
 
             if (keyList.size() > 0) {
-                roleService.massRemoveWithSession(keyList, UserUIContext.getUsername(), MyCollabUI.getAccountId());
+                roleService.massRemoveWithSession(keyList, UserUIContext.getUsername(), AppUI.getAccountId());
                 doSearch(searchCriteria);
             }
         } else {
-            roleService.removeByCriteria(searchCriteria, MyCollabUI.getAccountId());
+            roleService.removeByCriteria(searchCriteria, AppUI.getAccountId());
             doSearch(searchCriteria);
         }
     }
@@ -111,9 +113,9 @@ public class RoleListPresenter extends ListSelectionPresenter<RoleListView, Role
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
         if (UserUIContext.canRead(RolePermissionCollections.ACCOUNT_ROLE)) {
-            RoleContainer roleContainer = (RoleContainer) container;
-            roleContainer.removeAllComponents();
-            roleContainer.addComponent(view);
+            AccountModule accountModule = (AccountModule) container;
+            accountModule.gotoSubView(SettingUIConstants.ROLES, view);
+
             searchCriteria = (RoleSearchCriteria) data.getParams();
             doSearch(searchCriteria);
 

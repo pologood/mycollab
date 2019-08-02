@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
- *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.i18n;
 
@@ -58,6 +58,9 @@ public class LocalizationHelper {
     }
 
     public static String getMessage(Locale locale, Enum<?> key, Object... objects) {
+        if (key == null) {
+            return "";
+        }
         try {
             IMessageConveyor messageConveyor = getMessageConveyor(locale);
             return messageConveyor.getMessage(key, objects);
@@ -66,7 +69,7 @@ public class LocalizationHelper {
         }
     }
 
-    public static String getMessage(Locale locale, Class cls, String option, Object... objects) {
+    public static String getMessage(Locale locale, Class<? extends Enum> cls, String option, Object... objects) {
         if (StringUtils.isBlank(option)) {
             return "";
         }
@@ -90,13 +93,12 @@ public class LocalizationHelper {
         }
     }
 
-    public static Locale[] getAvailableLocales() {
-        return Locale.getAvailableLocales();
-    }
-
     public static Locale getLocaleInstance(String languageTag) {
         try {
-            return (languageTag == null) ? Locale.US : Locale.forLanguageTag(languageTag);
+            if (languageTag == null) return Locale.US;
+
+            Locale tmpLocale = Locale.forLanguageTag(languageTag);
+            return StringUtils.isBlank(tmpLocale.getLanguage()) ? Locale.US : tmpLocale;
         } catch (Exception e) {
             LOG.error("Invalid language {}", languageTag);
             return Locale.US;
@@ -104,6 +106,6 @@ public class LocalizationHelper {
     }
 
     public static Enum localizeYesNo(Boolean value) {
-        return Boolean.TRUE.equals(value) ? GenericI18Enum.BUTTON_YES : GenericI18Enum.BUTTON_NO;
+        return Boolean.TRUE.equals(value) ? GenericI18Enum.ACTION_YES : GenericI18Enum.ACTION_NO;
     }
 }

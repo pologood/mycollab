@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
@@ -21,8 +21,9 @@ import com.mycollab.core.MyCollabException;
 import com.mycollab.vaadin.AsyncInvoker;
 import com.mycollab.vaadin.mvp.AbstractVerticalPageView;
 import com.mycollab.vaadin.mvp.LazyPageView;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.UI;
 import org.vaadin.viritin.layouts.MWindow;
 
 /**
@@ -40,11 +41,12 @@ public abstract class AbstractLazyPageView extends AbstractVerticalPageView impl
         if (!isRunning) {
             this.removeAllComponents();
             isRunning = true;
-            AsyncInvoker.access(getUI(), new AsyncInvoker.PageCommand() {
+            UI ui = getUI();
+            AsyncInvoker.access(ui, new AsyncInvoker.PageCommand() {
                 @Override
                 public void run() {
                     progressIndicator = new ProgressIndicator();
-                    getUI().addWindow(progressIndicator);
+                    ui.addWindow(progressIndicator);
                 }
 
                 @Override
@@ -58,7 +60,7 @@ public abstract class AbstractLazyPageView extends AbstractVerticalPageView impl
 
                 @Override
                 public void cleanUp() {
-                    getUI().removeWindow(progressIndicator);
+                    ui.removeWindow(progressIndicator);
                     isRunning = false;
                 }
             });
@@ -71,7 +73,6 @@ public abstract class AbstractLazyPageView extends AbstractVerticalPageView impl
         private static final long serialVersionUID = -6157950150738214354L;
 
         ProgressIndicator() {
-            super();
             this.withDraggable(false).withClosable(false).withModal(true).withCenter().withStyleName("lazyload-progress");
 
             Div div = new Div().appendChild(new Div().setCSSClass("sk-cube sk-cube1"))

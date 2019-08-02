@@ -1,25 +1,25 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
 import com.mycollab.common.TableViewField;
 import com.mycollab.common.i18n.GenericI18Enum;
 import com.mycollab.module.project.CurrentProjectVariables;
-import com.mycollab.module.project.ProjectLinkBuilder;
+import com.mycollab.module.project.ProjectLinkGenerator;
 import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.domain.ProjectRole;
 import com.mycollab.module.project.domain.SimpleProjectRole;
@@ -27,10 +27,10 @@ import com.mycollab.module.project.domain.criteria.ProjectRoleSearchCriteria;
 import com.mycollab.module.project.service.ProjectRoleService;
 import com.mycollab.spring.AppContextUtil;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.HasMassItemActionHandler;
-import com.mycollab.vaadin.events.HasSearchHandlers;
-import com.mycollab.vaadin.events.HasSelectableItemHandlers;
-import com.mycollab.vaadin.events.HasSelectionOptionHandlers;
+import com.mycollab.vaadin.event.HasMassItemActionHandler;
+import com.mycollab.vaadin.event.HasSearchHandlers;
+import com.mycollab.vaadin.event.HasSelectableItemHandlers;
+import com.mycollab.vaadin.event.HasSelectionOptionHandlers;
 import com.mycollab.vaadin.mvp.AbstractVerticalPageView;
 import com.mycollab.vaadin.mvp.ViewComponent;
 import com.mycollab.vaadin.ui.DefaultMassItemActionHandlerContainer;
@@ -38,8 +38,11 @@ import com.mycollab.vaadin.web.ui.*;
 import com.mycollab.vaadin.web.ui.table.AbstractPagedBeanTable;
 import com.mycollab.vaadin.web.ui.table.DefaultPagedBeanTable;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.*;
-import org.vaadin.viritin.layouts.MHorizontalLayout;
+import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
+import org.vaadin.viritin.layouts.MCssLayout;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 import java.util.Arrays;
 
@@ -54,15 +57,16 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
     private ProjectRoleSearchPanel searchPanel;
     private SelectionOptionButton selectOptionButton;
     private DefaultPagedBeanTable<ProjectRoleService, ProjectRoleSearchCriteria, SimpleProjectRole> tableItem;
-    private VerticalLayout listLayout;
+    private MVerticalLayout listLayout;
     private DefaultMassItemActionHandlerContainer tableActionControls;
     private Label selectedItemsNumberLabel = new Label();
 
     public ProjectRoleListViewImpl() {
         this.setMargin(new MarginInfo(false, true, true, true));
         searchPanel = new ProjectRoleSearchPanel();
-        listLayout = new VerticalLayout();
-        with(searchPanel, listLayout);
+
+        listLayout = new MVerticalLayout().withMargin(false).withSpacing(false);
+        with(searchPanel, listLayout).expand(listLayout);
 
         this.generateDisplayTable();
     }
@@ -76,7 +80,6 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
         tableItem.addGeneratedColumn("selected", (source, itemId, columnId) -> {
             final SimpleProjectRole role = tableItem.getBeanByIndex(itemId);
             CheckBoxDecor cb = new CheckBoxDecor("", role.isSelected());
-            cb.setImmediate(true);
             cb.addValueChangeListener(valueChangeEvent -> tableItem.fireSelectItemEvent(role));
             role.setExtraData(cb);
             return cb;
@@ -85,11 +88,11 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
         tableItem.addGeneratedColumn("rolename", (source, itemId, columnId) -> {
             ProjectRole role = tableItem.getBeanByIndex(itemId);
             return new LabelLink(role.getRolename(),
-                    ProjectLinkBuilder.generateRolePreviewFullLink(role.getProjectid(), role.getId()));
+                    ProjectLinkGenerator.generateRolePreviewLink(role.getProjectid(), role.getId()));
         });
 
-        listLayout.addComponent(this.constructTableActionControls());
-        listLayout.addComponent(this.tableItem);
+        tableItem.setWidth("100%");
+        listLayout.with(constructTableActionControls(), tableItem).expand(tableItem);
     }
 
     @Override
@@ -103,14 +106,9 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
     }
 
     private ComponentContainer constructTableActionControls() {
-        CssLayout layoutWrapper = new CssLayout();
-        layoutWrapper.setWidth("100%");
-        MHorizontalLayout layout = new MHorizontalLayout();
-        layoutWrapper.addStyleName(WebThemes.TABLE_ACTION_CONTROLS);
-        layoutWrapper.addComponent(layout);
+        MCssLayout layout = new MCssLayout().withStyleName(WebThemes.TABLE_ACTION_CONTROLS).withFullWidth();
 
-        selectOptionButton = new SelectionOptionButton(this.tableItem);
-        layout.addComponent(this.selectOptionButton);
+        selectOptionButton = new SelectionOptionButton(tableItem);
 
         tableActionControls = new DefaultMassItemActionHandlerContainer();
         if (CurrentProjectVariables.canAccess(ProjectRolePermissionCollections.ROLES)) {
@@ -121,9 +119,8 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
         tableActionControls.addDownloadExcelActionItem();
         tableActionControls.addDownloadCsvActionItem();
 
-        layout.with(this.tableActionControls, this.selectedItemsNumberLabel).withAlign(selectedItemsNumberLabel,
-                Alignment.MIDDLE_LEFT);
-        return layoutWrapper;
+        layout.add(selectOptionButton, tableActionControls, this.selectedItemsNumberLabel);
+        return layout;
     }
 
     @Override
@@ -155,7 +152,7 @@ public class ProjectRoleListViewImpl extends AbstractVerticalPageView implements
     }
 
     @Override
-    public AbstractPagedBeanTable<ProjectRoleSearchCriteria, SimpleProjectRole> getPagedBeanTable() {
+    public AbstractPagedBeanTable<ProjectRoleSearchCriteria, SimpleProjectRole> getPagedBeanGrid() {
         return this.tableItem;
     }
 }

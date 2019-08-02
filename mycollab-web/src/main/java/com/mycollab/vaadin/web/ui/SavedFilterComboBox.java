@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
@@ -23,13 +23,14 @@ import com.mycollab.common.domain.criteria.SaveSearchResultCriteria;
 import com.mycollab.common.service.SaveSearchResultService;
 import com.mycollab.db.arguments.BasicSearchRequest;
 import com.mycollab.db.arguments.NumberSearchField;
+import com.mycollab.db.arguments.SearchCriteria;
 import com.mycollab.db.arguments.StringSearchField;
 import com.mycollab.db.query.SearchFieldInfo;
 import com.mycollab.db.query.SearchQueryInfo;
-import com.mycollab.eventmanager.EventBusFactory;
-import com.mycollab.shell.events.ShellEvent;
+import com.mycollab.vaadin.EventBusFactory;
+import com.mycollab.shell.event.ShellEvent;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
 import com.vaadin.ui.*;
 import org.apache.commons.collections.CollectionUtils;
@@ -67,10 +68,10 @@ public abstract class SavedFilterComboBox extends CustomField<String> {
         SaveSearchResultCriteria searchCriteria = new SaveSearchResultCriteria();
         searchCriteria.setType(StringSearchField.and(type));
         searchCriteria.setCreateUser(StringSearchField.and(UserUIContext.getUsername()));
-        searchCriteria.setSaccountid(new NumberSearchField(MyCollabUI.getAccountId()));
+        searchCriteria.setSaccountid(new NumberSearchField(AppUI.getAccountId()));
 
         SaveSearchResultService saveSearchResultService = AppContextUtil.getSpringBean(SaveSearchResultService.class);
-        List<SaveSearchResult> savedSearchResults = saveSearchResultService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
+        List<SaveSearchResult> savedSearchResults = (List<SaveSearchResult>)saveSearchResultService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
         savedQueries = new ArrayList<>();
         for (SaveSearchResult searchResultWithBLOBs : savedSearchResults) {
             try {
@@ -106,13 +107,12 @@ public abstract class SavedFilterComboBox extends CustomField<String> {
     @Override
     protected Component initContent() {
         componentsText = new TextField();
-        componentsText.setNullRepresentation("");
         componentsText.setReadOnly(true);
         componentsText.addStyleName("noBorderRight");
         componentsText.setWidth("100%");
         componentPopupSelection = new PopupButton();
         componentPopupSelection.addStyleName(WebThemes.MULTI_SELECT_BG);
-        componentPopupSelection.setDirection(Alignment.TOP_LEFT);
+        componentPopupSelection.setDirection(Alignment.BOTTOM_LEFT);
         componentPopupSelection.addClickListener(clickEvent -> initContentPopup());
 
         popupContent = new OptionPopupContent();
@@ -161,12 +161,6 @@ public abstract class SavedFilterComboBox extends CustomField<String> {
         }
     }
 
-
-    @Override
-    public Class<? extends String> getType() {
-        return String.class;
-    }
-
     public void addQuerySelectListener(QuerySelectListener listener) {
         addListener(QuerySelectEvent.class, listener, QUERY_SELECT);
     }
@@ -182,20 +176,29 @@ public abstract class SavedFilterComboBox extends CustomField<String> {
         }
     }
 
-    public static class QuerySelectEvent extends Component.Event {
-        private List<SearchFieldInfo> searchFieldInfos;
+    public static class QuerySelectEvent<S extends SearchCriteria> extends Component.Event {
+        private List<SearchFieldInfo<S>> searchFieldInfos;
 
-        QuerySelectEvent(Component source, List<SearchFieldInfo> searchFieldInfos) {
+        QuerySelectEvent(Component source, List<SearchFieldInfo<S>> searchFieldInfos) {
             super(source);
             this.searchFieldInfos = searchFieldInfos;
         }
 
-        public List<SearchFieldInfo> getSearchFieldInfos() {
+        public List<SearchFieldInfo<S>> getSearchFieldInfos() {
             return searchFieldInfos;
         }
     }
 
-    public interface QuerySelectListener extends Serializable {
-        void querySelect(QuerySelectEvent querySelectEvent);
+    @Override
+    protected void doSetValue(String s) {
+    }
+
+    @Override
+    public String getValue() {
+        return null;
+    }
+
+    public interface QuerySelectListener<S extends SearchCriteria> extends Serializable {
+        void querySelect(QuerySelectEvent<S> querySelectEvent);
     }
 }

@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui.field;
 
@@ -20,10 +20,10 @@ import com.mycollab.core.utils.StringUtils;
 import com.mycollab.module.ecm.domain.Content;
 import com.mycollab.module.ecm.service.ResourceService;
 import com.mycollab.spring.AppContextUtil;
+import com.mycollab.vaadin.ui.IgnoreBindingField;
 import com.mycollab.vaadin.web.ui.AttachmentDisplayComponent;
 import com.mycollab.vaadin.web.ui.AttachmentPanel;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.CustomField;
 import org.apache.commons.collections.CollectionUtils;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
@@ -33,7 +33,7 @@ import java.util.List;
  * @author MyCollab Ltd.
  * @since 4.5.3
  */
-public class AttachmentUploadField extends CustomField {
+public class AttachmentUploadField extends IgnoreBindingField {
     private static final long serialVersionUID = 1L;
 
     private ResourceService resourceService;
@@ -47,11 +47,6 @@ public class AttachmentUploadField extends CustomField {
     public AttachmentUploadField(String attachmentPath) {
         this.attachmentPath = attachmentPath;
         resourceService = AppContextUtil.getSpringBean(ResourceService.class);
-    }
-
-    @Override
-    public Class<?> getType() {
-        return Object.class;
     }
 
     public void saveContentsToRepo(String attachmentPath) {
@@ -72,5 +67,15 @@ public class AttachmentUploadField extends CustomField {
         } else {
             return attachmentPanel;
         }
+    }
+
+    @Override
+    protected void doSetValue(Object o) {
+
+    }
+
+    @Override
+    public Object getValue() {
+        return null;
     }
 }

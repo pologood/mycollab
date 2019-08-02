@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.shell.view;
 
@@ -20,10 +20,9 @@ import com.mycollab.configuration.EnDecryptHelper;
 import com.mycollab.core.UserInvalidInputException;
 import com.mycollab.core.utils.StringUtils;
 import com.mycollab.module.user.domain.SimpleUser;
-import com.mycollab.module.user.service.UserService;
-import com.mycollab.shell.ShellController;
+import com.mycollab.module.user.service.BillingAccountService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.mvp.ControllerRegistry;
 import com.mycollab.vaadin.mvp.PresenterResolver;
 import com.mycollab.vaadin.ui.MyCollabSession;
@@ -33,8 +32,6 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 import org.vaadin.viritin.util.BrowserCookie;
 
-import static com.mycollab.vaadin.ui.MyCollabSession.USER_VAL;
-
 /**
  * @author MyCollab Ltd.
  * @since 1.0
@@ -43,7 +40,7 @@ public class MainWindowContainer extends CssLayout {
     private static final long serialVersionUID = 1L;
 
     public MainWindowContainer() {
-        this.setCaption(MyCollabUI.getSiteName());
+        this.setCaption(AppUI.getSiteName());
         ControllerRegistry.addController(new ShellController(this));
         this.setSizeFull();
         this.setDefaultView();
@@ -55,8 +52,8 @@ public class MainWindowContainer extends CssLayout {
     }
 
     private void setDefaultView() {
-        UserService userService = AppContextUtil.getSpringBean(UserService.class);
-        int activeUsersCount = userService.getTotalActiveUsersInAccount(MyCollabUI.getAccountId());
+        BillingAccountService userService = AppContextUtil.getSpringBean(BillingAccountService.class);
+        int activeUsersCount = userService.getTotalActiveUsersInAccount(AppUI.getAccountId());
         if (activeUsersCount == 0) {
             this.setContent(new SetupNewInstanceView());
         } else {
@@ -67,7 +64,7 @@ public class MainWindowContainer extends CssLayout {
                     if (loginParams.length == 2) {
                         try {
                             ((DesktopApplication) UI.getCurrent()).doLogin(loginParams[0], EnDecryptHelper.decryptText(loginParams[1]), false);
-                        } catch (UserInvalidInputException e) {
+                        } catch (Exception e) {
                             navigateToLoginView();
                         }
                     } else {
@@ -75,7 +72,7 @@ public class MainWindowContainer extends CssLayout {
                     }
                 } else {
                     try {
-                        SimpleUser user = (SimpleUser) MyCollabSession.getSessionVariable(USER_VAL);
+                        SimpleUser user = (SimpleUser) MyCollabSession.getSessionVariable(MyCollabSession.USER_VAL);
                         if (user != null) {
                             ((DesktopApplication) UI.getCurrent()).afterDoLogin(user);
                         } else {

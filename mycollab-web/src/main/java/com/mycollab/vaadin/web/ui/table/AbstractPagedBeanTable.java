@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui.table;
 
@@ -24,17 +24,18 @@ import com.mycollab.common.service.CustomViewStoreService;
 import com.mycollab.db.arguments.BasicSearchRequest;
 import com.mycollab.db.arguments.SearchCriteria;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.PageableHandler;
-import com.mycollab.vaadin.events.SelectableItemHandler;
-import com.vaadin.data.Container;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.BeanItemContainer;
-import com.vaadin.server.FontAwesome;
+import com.mycollab.vaadin.event.PageableHandler;
+import com.mycollab.vaadin.event.SelectableItemHandler;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.*;
-import com.vaadin.ui.Table.ColumnGenerator;
 import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.v7.data.Container;
+import com.vaadin.v7.data.util.BeanItem;
+import com.vaadin.v7.data.util.BeanItemContainer;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.ColumnGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,21 +52,19 @@ import static com.mycollab.vaadin.web.ui.WebThemes.SCROLLABLE_CONTAINER;
  * @author MyCollab Ltd.
  * @since 2.0
  */
-public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extends VerticalLayout implements IPagedBeanTable<S, B> {
+public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extends VerticalLayout implements IPagedTable<S, B> {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractPagedBeanTable.class);
 
-    private int displayNumItems = BasicSearchRequest.DEFAULT_NUMBER_SEARCH_ITEMS();
+    private int displayNumItems = BasicSearchRequest.DEFAULT_NUMBER_SEARCH_ITEMS;
     private Collection<B> currentListData;
     protected BasicSearchRequest<S> searchRequest;
-
-    private MHorizontalLayout pageManagement;
 
     private boolean isAscending = true;
     private Object sortColumnId;
 
-    protected int currentPage = 1;
+    private int currentPage = 1;
     private int totalPage = 1;
     private int currentViewCount;
     protected int totalCount;
@@ -73,8 +72,8 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
     protected Table tableItem;
     private HorizontalLayout controlBarWrapper;
 
-    private Set<SelectableItemHandler<B>> selectableHandlers;
-    private Set<PageableHandler> pageableHandlers;
+    private Set<SelectableItemHandler<B>> selectableHandlers = new HashSet<>();
+    private Set<PageableHandler> pageableHandlers = new HashSet<>();
 
     protected Class<B> type;
 
@@ -93,9 +92,10 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
     }
 
     public AbstractPagedBeanTable(Class<B> type, String viewId, TableViewField requiredColumn, List<TableViewField> displayColumns) {
+        this.setMargin(false);
         if (viewId != null) {
             CustomViewStoreService customViewStoreService = AppContextUtil.getSpringBean(CustomViewStoreService.class);
-            CustomViewStore viewLayoutDef = customViewStoreService.getViewLayoutDef(MyCollabUI.getAccountId(),
+            CustomViewStore viewLayoutDef = customViewStoreService.getViewLayoutDef(AppUI.getAccountId(),
                     UserUIContext.getUsername(), viewId);
             if (!(viewLayoutDef instanceof NullCustomViewStore)) {
                 try {
@@ -124,14 +124,19 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
     }
 
     private void displayTableColumns() {
-        List<String> visibleColumnsCol = new ArrayList<>();
-        List<String> columnHeadersCol = new ArrayList<>();
+        Set<String> visibleColumnsCol = new LinkedHashSet<>();
+        Set<String> columnHeadersCol = new LinkedHashSet<>();
 
         if (requiredColumn != null) {
             visibleColumnsCol.add(requiredColumn.getField());
             columnHeadersCol.add(UserUIContext.getMessage(requiredColumn.getDescKey()));
             tableItem.setColumnWidth(requiredColumn.getField(), requiredColumn.getDefaultWidth());
         }
+
+        displayColumns.forEach(viewField -> {
+            visibleColumnsCol.add(viewField.getField());
+            columnHeadersCol.add(UserUIContext.getMessage(viewField.getDescKey()));
+        });
 
         for (int i = 0; i < displayColumns.size(); i++) {
             TableViewField viewField = displayColumns.get(i);
@@ -154,9 +159,6 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
 
     @Override
     public void addSelectableItemHandler(final SelectableItemHandler<B> handler) {
-        if (selectableHandlers == null) {
-            selectableHandlers = new HashSet<>();
-        }
         selectableHandlers.add(handler);
     }
 
@@ -173,15 +175,11 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
 
     @Override
     public void addPageableHandler(final PageableHandler handler) {
-        if (pageableHandlers == null) {
-            pageableHandlers = new HashSet<>();
-        }
         pageableHandlers.add(handler);
-
     }
 
     @Override
-    public Collection<B> getCurrentDataList() {
+    public Collection<B> getItems() {
         return currentListData;
     }
 
@@ -228,22 +226,17 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
         doSearch();
     }
 
-    protected void pageChange(final int currentPage) {
+    private void pageChange(final int currentPage) {
         if (searchRequest != null) {
             this.currentPage = currentPage;
             searchRequest.setCurrentPage(currentPage);
             doSearch();
-
-            if (pageableHandlers != null) {
-                pageableHandlers.forEach(handler -> handler.move(currentPage));
-            }
+            pageableHandlers.forEach(handler -> handler.move(currentPage));
         }
     }
 
     public void fireSelectItemEvent(final B item) {
-        if (this.selectableHandlers != null) {
-            selectableHandlers.forEach(handler -> handler.onSelect(item));
-        }
+        selectableHandlers.forEach(handler -> handler.onSelect(item));
     }
 
     private ComponentContainer createPagingControls() {
@@ -251,7 +244,7 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
         controlBarWrapper.setWidth("100%");
         controlBarWrapper.setStyleName("listControl");
 
-        pageManagement = new MHorizontalLayout();
+        MHorizontalLayout pageManagement = new MHorizontalLayout();
 
         // defined layout here ---------------------------
 
@@ -350,7 +343,7 @@ public abstract class AbstractPagedBeanTable<S extends SearchCriteria, B> extend
         }
 
         if (StringUtils.isNotBlank((String) sortColumnId)) {
-            tableItem.setColumnIcon(sortColumnId, isAscending ? FontAwesome.CARET_DOWN : FontAwesome.CARET_UP);
+            tableItem.setColumnIcon(sortColumnId, isAscending ? VaadinIcons.CARET_DOWN : VaadinIcons.CARET_UP);
         }
 
         tableItem.addHeaderClickListener(headerClickEvent -> {

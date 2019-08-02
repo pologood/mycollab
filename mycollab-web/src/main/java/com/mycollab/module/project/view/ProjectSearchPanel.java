@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view;
 
@@ -28,7 +28,7 @@ import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.web.ui.*;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.*;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MTextField;
@@ -61,11 +61,13 @@ public class ProjectSearchPanel extends DefaultGenericSearchPanel<ProjectSearchC
 
     @Override
     protected Component buildExtraControls() {
-        MButton createBtn = new MButton(UserUIContext.getMessage(ProjectI18nEnum.NEW),
-                clickEvent -> UI.getCurrent().addWindow(ViewManager.getCacheComponent(AbstractProjectAddWindow.class)))
-                .withStyleName(WebThemes.BUTTON_ACTION).withIcon(FontAwesome.PLUS);
-        createBtn.setVisible(UserUIContext.canBeYes(RolePermissionCollections.CREATE_NEW_PROJECT));
-        return createBtn;
+        if (UserUIContext.canBeYes(RolePermissionCollections.CREATE_NEW_PROJECT)) {
+            return new MButton(UserUIContext.getMessage(ProjectI18nEnum.NEW),
+                    clickEvent -> UI.getCurrent().addWindow(ViewManager.getCacheComponent(AbstractProjectAddWindow.class)))
+                    .withStyleName(WebThemes.BUTTON_ACTION).withIcon(VaadinIcons.PLUS);
+        }
+
+        return null;
     }
 
     private class ProjectBasicSearchLayout extends BasicSearchLayout<ProjectSearchCriteria> {
@@ -81,12 +83,12 @@ public class ProjectSearchPanel extends DefaultGenericSearchPanel<ProjectSearchC
         public ComponentContainer constructBody() {
             MHorizontalLayout basicSearchBody = new MHorizontalLayout().withMargin(true);
 
-            nameField = new MTextField().withInputPrompt(UserUIContext.getMessage(GenericI18Enum.ACTION_QUERY_BY_TEXT))
+            nameField = new MTextField().withPlaceholder(UserUIContext.getMessage(GenericI18Enum.ACTION_QUERY_BY_TEXT))
                     .withWidth(WebUIConstants.DEFAULT_CONTROL_WIDTH);
             basicSearchBody.with(nameField).withAlign(nameField, Alignment.MIDDLE_CENTER);
 
             MButton searchBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_SEARCH), clickEvent ->
-                    callSearchAction()).withIcon(FontAwesome.SEARCH).withStyleName(WebThemes.BUTTON_ACTION)
+                    callSearchAction()).withIcon(VaadinIcons.SEARCH).withStyleName(WebThemes.BUTTON_ACTION)
                     .withClickShortcut(ShortcutAction.KeyCode.ENTER);
             basicSearchBody.with(searchBtn).withAlign(searchBtn, Alignment.MIDDLE_LEFT);
 
@@ -104,7 +106,7 @@ public class ProjectSearchPanel extends DefaultGenericSearchPanel<ProjectSearchC
         @Override
         protected ProjectSearchCriteria fillUpSearchCriteria() {
             ProjectSearchCriteria searchCriteria = new ProjectSearchCriteria();
-            searchCriteria.setProjectName(StringSearchField.and(this.nameField.getValue().trim()));
+            searchCriteria.setProjectName(StringSearchField.and(nameField.getValue().trim()));
             return searchCriteria;
         }
     }

@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.user.accountsettings.team.view;
 
@@ -23,30 +23,34 @@ import com.mycollab.db.arguments.BasicSearchRequest;
 import com.mycollab.db.arguments.SearchCriteria;
 import com.mycollab.db.arguments.StringSearchField;
 import com.mycollab.db.query.LazyValueInjector;
-import com.mycollab.eventmanager.EventBusFactory;
 import com.mycollab.module.billing.RegisterStatusConstants;
-import com.mycollab.module.user.AccountLinkBuilder;
+import com.mycollab.module.billing.UserStatusConstants;
 import com.mycollab.module.user.AccountLinkGenerator;
 import com.mycollab.module.user.accountsettings.localization.RoleI18nEnum;
 import com.mycollab.module.user.accountsettings.localization.UserI18nEnum;
 import com.mycollab.module.user.domain.SimpleUser;
 import com.mycollab.module.user.domain.criteria.UserSearchCriteria;
+import com.mycollab.module.user.esb.SendUserEmailVerifyRequestEvent;
 import com.mycollab.module.user.esb.SendUserInvitationEvent;
-import com.mycollab.module.user.events.UserEvent;
+import com.mycollab.module.user.event.UserEvent;
 import com.mycollab.module.user.service.UserService;
 import com.mycollab.security.RolePermissionCollections;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.mvp.AbstractVerticalPageView;
 import com.mycollab.vaadin.mvp.ViewComponent;
-import com.mycollab.vaadin.ui.*;
+import com.mycollab.vaadin.ui.ELabel;
+import com.mycollab.vaadin.ui.HeaderWithIcon;
+import com.mycollab.vaadin.ui.NotificationUtil;
+import com.mycollab.vaadin.ui.UserAvatarControlFactory;
 import com.mycollab.vaadin.web.ui.ConfirmDialogExt;
 import com.mycollab.vaadin.web.ui.SearchTextField;
 import com.mycollab.vaadin.web.ui.WebThemes;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.viritin.button.MButton;
@@ -67,35 +71,39 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
     private CssLayout contentLayout;
     private UserSearchCriteria searchCriteria;
     private boolean sortAsc = true;
-    private HeaderWithFontAwesome headerText;
+    private HeaderWithIcon headerText;
 
     public UserListViewImpl() {
-        super();
         this.setMargin(new MarginInfo(false, true, false, true));
         MHorizontalLayout header = new MHorizontalLayout().withMargin(new MarginInfo(true, false, true, false))
                 .withFullWidth();
         MButton createBtn = new MButton(UserUIContext.getMessage(UserI18nEnum.NEW),
                 clickEvent -> EventBusFactory.getInstance().post(new UserEvent.GotoAdd(this, null)))
-                .withIcon(FontAwesome.PLUS).withStyleName(WebThemes.BUTTON_ACTION)
+                .withIcon(VaadinIcons.PLUS).withStyleName(WebThemes.BUTTON_ACTION)
                 .withVisible(UserUIContext.canWrite(RolePermissionCollections.ACCOUNT_USER));
 
-        headerText = HeaderWithFontAwesome.h2(FontAwesome.USERS, UserUIContext.getMessage(UserI18nEnum.LIST) + " " +
+        MButton bulkInviteBtn = new MButton(UserUIContext.getMessage(UserI18nEnum.BULK_INVITE),
+                clickEvent -> EventBusFactory.getInstance().post(new UserEvent.GotoBulkInvite(this, null)))
+                .withIcon(VaadinIcons.PLUS).withStyleName(WebThemes.BUTTON_ACTION)
+                .withVisible(UserUIContext.canWrite(RolePermissionCollections.ACCOUNT_USER));
+
+        headerText = HeaderWithIcon.h2(VaadinIcons.USERS, UserUIContext.getMessage(UserI18nEnum.LIST) + " " +
                 UserUIContext.getMessage(GenericI18Enum.OPT_TOTAL_VALUE, 0));
 
-        final MButton sortBtn = new MButton().withIcon(FontAwesome.SORT_ALPHA_ASC).withStyleName(WebThemes.BUTTON_ICON_ONLY);
+        MButton sortBtn = new MButton().withIcon(VaadinIcons.CARET_UP).withStyleName(WebThemes.BUTTON_ICON_ONLY);
         sortBtn.addClickListener(clickEvent -> {
             sortAsc = !sortAsc;
             if (sortAsc) {
-                sortBtn.setIcon(FontAwesome.SORT_ALPHA_ASC);
+                sortBtn.setIcon(VaadinIcons.CARET_UP);
                 displayUsers();
             } else {
-                sortBtn.setIcon(FontAwesome.SORT_ALPHA_DESC);
+                sortBtn.setIcon(VaadinIcons.CARET_DOWN);
                 displayUsers();
             }
         });
         header.addComponent(sortBtn);
 
-        final SearchTextField searchTextField = new SearchTextField() {
+        SearchTextField searchTextField = new SearchTextField() {
             @Override
             public void doSearch(String value) {
                 searchCriteria.setDisplayName(StringSearchField.and(value));
@@ -116,10 +124,10 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
                     protected Object doEval() {
                         return searchCriteria;
                     }
-                }))).withIcon(FontAwesome.PRINT).withStyleName(WebThemes.BUTTON_OPTION)
+                }))).withIcon(VaadinIcons.PRINT).withStyleName(WebThemes.BUTTON_OPTION)
                 .withDescription(UserUIContext.getMessage(GenericI18Enum.ACTION_EXPORT));
 
-        header.with(headerText, sortBtn, searchTextField, printBtn, createBtn).alignAll(Alignment.MIDDLE_LEFT).expand(headerText);
+        header.with(headerText, sortBtn, searchTextField, printBtn, createBtn, bulkInviteBtn).alignAll(Alignment.MIDDLE_LEFT).expand(headerText);
         this.addComponent(header);
 
         contentLayout = new CssLayout();
@@ -142,25 +150,21 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
         }
 
         UserService userService = AppContextUtil.getSpringBean(UserService.class);
-        List<SimpleUser> userAccountList = userService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
-        headerText.updateTitle(UserUIContext.getMessage(UserI18nEnum.LIST) + " " +
-                UserUIContext.getMessage(GenericI18Enum.OPT_TOTAL_VALUE, userAccountList.size()));
+        List<SimpleUser> users = (List<SimpleUser>) userService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
+        headerText.updateTitle(String.format("%s %s", UserUIContext.getMessage(UserI18nEnum.LIST), UserUIContext.getMessage(GenericI18Enum.OPT_TOTAL_VALUE, users.size())));
 
-        for (SimpleUser userAccount : userAccountList) {
-            contentLayout.addComponent(generateMemberBlock(userAccount));
-        }
+        users.forEach(user -> contentLayout.addComponent(generateMemberBlock(user)));
     }
 
-    private Component generateMemberBlock(final SimpleUser member) {
-        VerticalLayout blockContent = new VerticalLayout();
-        blockContent.setWidth("350px");
-        blockContent.setStyleName("member-block");
-        if (RegisterStatusConstants.NOT_LOG_IN_YET.equals(member.getRegisterstatus())) {
+    private Component generateMemberBlock(SimpleUser member) {
+        MVerticalLayout blockContent = new MVerticalLayout().withWidth("350px").withStyleName("member-block");
+        if (RegisterStatusConstants.NOT_LOG_IN_YET.equals(member.getRegisterstatus())
+                || !UserStatusConstants.EMAIL_VERIFIED.equals(member.getStatus())) {
             blockContent.addStyleName("inactive");
         }
         MHorizontalLayout blockTop = new MHorizontalLayout().withFullWidth();
         Image memberAvatar = UserAvatarControlFactory.createUserAvatarEmbeddedComponent(member.getAvatarid(), 100);
-        memberAvatar.addStyleName(UIConstants.CIRCLE_BOX);
+        memberAvatar.addStyleName(WebThemes.CIRCLE_BOX);
         blockTop.addComponent(memberAvatar);
 
         MVerticalLayout memberInfo = new MVerticalLayout().withMargin(false);
@@ -171,49 +175,59 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
 
         if (RegisterStatusConstants.NOT_LOG_IN_YET.equals(member.getRegisterstatus())) {
             MButton resendBtn = new MButton(UserUIContext.getMessage(UserI18nEnum.ACTION_RESEND_INVITATION), clickEvent -> {
-                SendUserInvitationEvent invitationEvent = new SendUserInvitationEvent(member.getUsername(), null,
-                        member.getInviteUser(), MyCollabUI.getSubDomain(), MyCollabUI.getAccountId());
+                SendUserInvitationEvent invitationEvent = new SendUserInvitationEvent(member.getUsername(), "",
+                        member.getInviteUser(), AppUI.getSubDomain(), AppUI.getAccountId());
                 AsyncEventBus asyncEventBus = AppContextUtil.getSpringBean(AsyncEventBus.class);
                 asyncEventBus.post(invitationEvent);
                 NotificationUtil.showNotification(UserUIContext.getMessage(GenericI18Enum.OPT_SUCCESS), UserUIContext
                         .getMessage(UserI18nEnum.OPT_SEND_INVITATION_SUCCESSFULLY, member.getDisplayName()));
             }).withStyleName(WebThemes.BUTTON_LINK);
             buttonControls.with(resendBtn);
+        } else {
+            if (!UserStatusConstants.EMAIL_VERIFIED.equals(member.getStatus())) {
+                MButton resendBtn = new MButton(UserUIContext.getMessage(UserI18nEnum.ACTION_CONFIRM_EMAIL), clickEvent -> {
+                    SendUserEmailVerifyRequestEvent confirmEvent = new SendUserEmailVerifyRequestEvent(AppUI.getAccountId(), member);
+                    AsyncEventBus asyncEventBus = AppContextUtil.getSpringBean(AsyncEventBus.class);
+                    asyncEventBus.post(confirmEvent);
+                    NotificationUtil.showNotification(UserUIContext.getMessage(GenericI18Enum.OPT_SUCCESS), UserUIContext
+                            .getMessage(UserI18nEnum.OPT_SEND_INVITATION_SUCCESSFULLY, member.getDisplayName()));
+                }).withStyleName(WebThemes.BUTTON_LINK).withDescription(UserUIContext.getMessage(UserI18nEnum.ACTION_CONFIRM_EMAIL_HELP));
+                buttonControls.with(resendBtn);
+            }
         }
 
         MButton editBtn = new MButton("", clickEvent -> EventBusFactory.getInstance().post(new UserEvent.GotoEdit(UserListViewImpl.this, member)))
-                .withIcon(FontAwesome.EDIT).withStyleName(WebThemes.BUTTON_LINK);
+                .withIcon(VaadinIcons.EDIT).withStyleName(WebThemes.BUTTON_LINK);
         buttonControls.with(editBtn);
 
         MButton deleteBtn = new MButton("", clickEvent ->
                 ConfirmDialogExt.show(UI.getCurrent(),
-                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, MyCollabUI.getSiteName()),
+                        UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_TITLE, AppUI.getSiteName()),
                         UserUIContext.getMessage(GenericI18Enum.DIALOG_DELETE_SINGLE_ITEM_MESSAGE),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_YES),
-                        UserUIContext.getMessage(GenericI18Enum.BUTTON_NO),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_YES),
+                        UserUIContext.getMessage(GenericI18Enum.ACTION_NO),
                         confirmDialog -> {
                             if (confirmDialog.isConfirmed()) {
                                 UserService userService = AppContextUtil.getSpringBean(UserService.class);
-                                userService.pendingUserAccounts(Collections.singletonList(member.getUsername()), MyCollabUI.getAccountId());
+                                userService.pendingUserAccounts(Collections.singletonList(member.getUsername()), AppUI.getAccountId());
                                 EventBusFactory.getInstance().post(new UserEvent.GotoList(UserListViewImpl.this, null));
                             }
                         })
-        ).withIcon(FontAwesome.TRASH_O).withStyleName(WebThemes.BUTTON_LINK);
+        ).withIcon(VaadinIcons.TRASH).withStyleName(WebThemes.BUTTON_LINK);
         buttonControls.with(deleteBtn);
 
-        memberInfo.addComponent(buttonControls);
-        memberInfo.setComponentAlignment(buttonControls, Alignment.MIDDLE_RIGHT);
+        memberInfo.with(buttonControls).withAlign(buttonControls, Alignment.MIDDLE_RIGHT);
 
-        A memberLink = new A(AccountLinkGenerator.generatePreviewFullUserLink(MyCollabUI.getSiteUrl(),
-                member.getUsername())).appendText(member.getDisplayName());
-        ELabel memberLinkLbl = ELabel.h3(memberLink.write()).withStyleName(UIConstants.TEXT_ELLIPSIS);
-        memberInfo.addComponent(memberLinkLbl);
-        memberInfo.addComponent(ELabel.hr());
+        A memberLink = new A(AccountLinkGenerator.generateUserLink(member.getUsername()))
+                .appendText(member.getDisplayName());
+        ELabel memberLinkLbl = ELabel.h3(memberLink.write()).withStyleName(WebThemes.TEXT_ELLIPSIS);
 
-        if (member.getRoleid() != null) {
-            String memberRoleLinkPrefix = String.format("<a href=\"%s\"", AccountLinkBuilder.generatePreviewFullRoleLink(member.getRoleid()));
-            ELabel memberRole = new ELabel(ContentMode.HTML).withStyleName(UIConstants.TEXT_ELLIPSIS);
-            if (Boolean.TRUE.equals(member.getIsAccountOwner())) {
+        memberInfo.with(memberLinkLbl, ELabel.hr());
+
+        if (member.getRoleId() != null) {
+            String memberRoleLinkPrefix = String.format("<a href=\"%s\"", AccountLinkGenerator.generateRoleLink(member.getRoleId()));
+            ELabel memberRole = new ELabel(ContentMode.HTML).withStyleName(WebThemes.TEXT_ELLIPSIS);
+            if (Boolean.TRUE.equals(member.isAccountOwner())) {
                 memberRole.setValue(String.format("%sstyle=\"color: #B00000;\">%s</a>", memberRoleLinkPrefix,
                         UserUIContext.getMessage(RoleI18nEnum.OPT_ACCOUNT_OWNER)));
             } else {
@@ -221,19 +235,17 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
                         memberRoleLinkPrefix, member.getRoleName()));
             }
             memberInfo.addComponent(memberRole);
-        } else if (Boolean.TRUE.equals(member.getIsAccountOwner())) {
+        } else if (Boolean.TRUE.equals(member.isAccountOwner())) {
             Label memberRole = new Label(String.format("<a style=\"color: #B00000;\">%s</a>", UserUIContext.getMessage
                     (RoleI18nEnum.OPT_ACCOUNT_OWNER)), ContentMode.HTML);
             memberInfo.addComponent(memberRole);
         } else {
-            Label lbl = new Label();
-            lbl.setHeight("10px");
-            memberInfo.addComponent(lbl);
+            memberInfo.addComponent(new ELabel().withHeight("10px"));
         }
 
-        if (Boolean.TRUE.equals(MyCollabUI.showEmailPublicly())) {
+        if (Boolean.TRUE.equals(AppUI.showEmailPublicly())) {
             Label memberEmailLabel = ELabel.html(String.format("<a href='mailto:%s'>%s</a>", member.getUsername(), member.getUsername()))
-                    .withStyleName(UIConstants.TEXT_ELLIPSIS, UIConstants.META_INFO).withFullWidth();
+                    .withStyleName(WebThemes.TEXT_ELLIPSIS, WebThemes.META_INFO).withFullWidth();
             memberInfo.addComponent(memberEmailLabel);
         }
 
@@ -244,6 +256,7 @@ public class UserListViewImpl extends AbstractVerticalPageView implements UserLi
         ELabel lastAccessTimeLbl = ELabel.html(UserUIContext.getMessage(UserI18nEnum.OPT_MEMBER_LOGGED_IN, UserUIContext
                 .formatPrettyTime(member.getLastaccessedtime()))).withDescription(UserUIContext.formatDateTime(member.getLastaccessedtime()));
         memberInfo.addComponent(lastAccessTimeLbl);
+
         blockTop.with(memberInfo).expand(memberInfo);
         blockContent.addComponent(blockTop);
         return blockContent;

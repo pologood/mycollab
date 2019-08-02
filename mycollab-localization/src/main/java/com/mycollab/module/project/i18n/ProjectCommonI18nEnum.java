@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-localization.
+ * Copyright © MyCollab
  *
- * mycollab-localization is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-localization is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-localization.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.i18n;
 
@@ -63,7 +63,6 @@ public enum ProjectCommonI18nEnum {
     VIEW_MEMBER,
     VIEW_SETTINGS,
     VIEW_FAVORITES,
-    VIEW_GANTT_CHART,
 
     SUB_INFO_PEOPLE,
     ITEM_CREATED_DATE,
@@ -71,6 +70,7 @@ public enum ProjectCommonI18nEnum {
     SUB_INFO_DATES,
     ITEM_CREATED_PEOPLE,
     ITEM_ASSIGN_PEOPLE,
+    SUB_INFO_PLANNING,
 
     OPT_ASSIGNMENT_LIST,
     OPT_ASSIGNMENT_VALUE,

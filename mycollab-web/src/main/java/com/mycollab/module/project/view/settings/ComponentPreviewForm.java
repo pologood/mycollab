@@ -1,33 +1,34 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings;
 
-import com.mycollab.db.arguments.NumberSearchField;
+import com.mycollab.core.utils.DateTimeUtils;
+import com.mycollab.db.arguments.DateSearchField;
+import com.mycollab.db.arguments.SearchField;
 import com.mycollab.db.arguments.SetSearchField;
 import com.mycollab.module.project.CurrentProjectVariables;
 import com.mycollab.module.project.ProjectTypeConstants;
-import com.mycollab.module.project.i18n.OptionI18nEnum.BugStatus;
-import com.mycollab.module.project.view.bug.BugRowRenderer;
+import com.mycollab.module.project.domain.Component;
+import com.mycollab.module.project.domain.ProjectTicket;
+import com.mycollab.module.project.domain.SimpleComponent;
+import com.mycollab.module.project.domain.criteria.ProjectTicketSearchCriteria;
+import com.mycollab.module.project.service.ProjectTicketService;
 import com.mycollab.module.project.view.settings.component.ProjectUserFormLinkField;
-import com.mycollab.module.tracker.domain.Component;
-import com.mycollab.module.tracker.domain.SimpleBug;
-import com.mycollab.module.tracker.domain.SimpleComponent;
-import com.mycollab.module.tracker.domain.criteria.BugSearchCriteria;
-import com.mycollab.module.tracker.service.BugService;
+import com.mycollab.module.project.view.ticket.TicketRowRenderer;
 import com.mycollab.spring.AppContextUtil;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.ui.AbstractBeanFieldGroupViewFieldFactory;
@@ -36,14 +37,14 @@ import com.mycollab.vaadin.ui.field.RichTextViewField;
 import com.mycollab.vaadin.web.ui.AdvancedPreviewBeanForm;
 import com.mycollab.vaadin.web.ui.DefaultBeanPagedList;
 import com.mycollab.vaadin.web.ui.DefaultDynaFormLayout;
+import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.field.ContainerViewField;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Alignment;
+import com.vaadin.data.HasValue;
 import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.Field;
-import com.vaadin.ui.Label;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+
+import static com.mycollab.common.i18n.OptionI18nEnum.StatusI18nEnum;
 
 /**
  * @author MyCollab Ltd
@@ -52,7 +53,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
 public class ComponentPreviewForm extends AdvancedPreviewBeanForm<SimpleComponent> {
     @Override
     public void setBean(SimpleComponent bean) {
-        setFormLayoutFactory(new DefaultDynaFormLayout(ProjectTypeConstants.BUG_COMPONENT, ComponentDefaultFormLayoutFactory.getForm(),
+        setFormLayoutFactory(new DefaultDynaFormLayout(ProjectTypeConstants.COMPONENT, ComponentDefaultFormLayoutFactory.getReadForm(),
                 Component.Field.name.name()));
         setBeanFormFieldFactory(new ReadFormFieldFactory(this));
         super.setBean(bean);
@@ -66,77 +67,66 @@ public class ComponentPreviewForm extends AdvancedPreviewBeanForm<SimpleComponen
         }
 
         @Override
-        protected Field<?> onCreateField(Object propertyId) {
+        protected HasValue<?> onCreateField(Object propertyId) {
             SimpleComponent beanItem = attachForm.getBean();
             if (Component.Field.userlead.equalTo(propertyId)) {
-                return new ProjectUserFormLinkField(beanItem.getUserlead(), beanItem.getUserLeadAvatarId(),
-                        beanItem.getUserLeadFullName());
-            } else if (Component.Field.id.equalTo(propertyId)) {
+                return new ProjectUserFormLinkField(beanItem.getProjectid(), beanItem.getUserlead(),
+                        beanItem.getUserLeadAvatarId(), beanItem.getUserLeadFullName());
+            } else if ("section-assignments".equals(propertyId)) {
                 ContainerViewField containerField = new ContainerViewField();
-                containerField.addComponentField(new BugsComp(beanItem));
+                containerField.addComponentField(new TicketsComp(beanItem));
                 return containerField;
             } else if (Component.Field.description.equalTo(propertyId)) {
-                return new RichTextViewField(beanItem.getDescription());
+                return new RichTextViewField();
             }
             return null;
         }
     }
 
-    private static class BugsComp extends MVerticalLayout {
-        private BugSearchCriteria searchCriteria;
-        private DefaultBeanPagedList<BugService, BugSearchCriteria, SimpleBug> bugList;
+    private static class TicketsComp extends MVerticalLayout {
+        private ProjectTicketSearchCriteria searchCriteria;
+        private DefaultBeanPagedList<ProjectTicketService, ProjectTicketSearchCriteria, ProjectTicket> ticketList;
 
-        BugsComp(SimpleComponent beanItem) {
-            withMargin(false).withFullWidth();
-            MHorizontalLayout header = new MHorizontalLayout().withFullWidth();
+        TicketsComp(SimpleComponent beanItem) {
+            withMargin(false).withFullWidth().withStyleName(WebThemes.NO_SCROLLABLE_CONTAINER);
 
-            final CheckBox openSelection = new BugStatusCheckbox(BugStatus.Open, true);
-            CheckBox reOpenSelection = new BugStatusCheckbox(BugStatus.ReOpen, true);
-            CheckBox verifiedSelection = new BugStatusCheckbox(BugStatus.Verified, true);
-            CheckBox resolvedSelection = new BugStatusCheckbox(BugStatus.Resolved, true);
+            CheckBox openSelection = new CheckBox(UserUIContext.getMessage(StatusI18nEnum.Open), true);
+            openSelection.addValueChangeListener(valueChangeEvent -> {
+                if (openSelection.getValue()) {
+                    searchCriteria.setOpen(new SearchField());
+                } else {
+                    searchCriteria.setOpen(null);
+                }
+                updateSearchStatus();
+            });
 
-            Label spacingLbl1 = new Label("");
+            CheckBox overdueSelection = new CheckBox(UserUIContext.getMessage(StatusI18nEnum.Overdue), false);
+            overdueSelection.addValueChangeListener(valueChangeEvent -> {
+                if (overdueSelection.getValue()) {
+                    searchCriteria.setDueDate(new DateSearchField(DateTimeUtils.getCurrentDateWithoutMS().toLocalDate(),
+                            DateSearchField.LESS_THAN));
+                } else {
+                    searchCriteria.setDueDate(null);
+                }
+                updateSearchStatus();
+            });
 
-            header.with(openSelection, reOpenSelection, verifiedSelection,
-                    resolvedSelection, spacingLbl1).alignAll(Alignment.MIDDLE_LEFT).expand(spacingLbl1);
+            MHorizontalLayout header = new MHorizontalLayout(openSelection, overdueSelection);
 
-            bugList = new DefaultBeanPagedList(AppContextUtil.getSpringBean(BugService.class), new BugRowRenderer());
-            bugList.setControlStyle("");
-            bugList.setMargin(new MarginInfo(true, true, true, false));
+            ticketList = new DefaultBeanPagedList(AppContextUtil.getSpringBean(ProjectTicketService.class), new TicketRowRenderer());
 
-            searchCriteria = new BugSearchCriteria();
-            searchCriteria.setProjectId(new NumberSearchField(CurrentProjectVariables.getProjectId()));
-            searchCriteria.setComponentids(new SetSearchField<>(beanItem.getId()));
-            searchCriteria.setStatuses(new SetSearchField<>(BugStatus.Open.name(), BugStatus.ReOpen.name(),
-                    BugStatus.Verified.name(), BugStatus.Resolved.name()));
+            searchCriteria = new ProjectTicketSearchCriteria();
+            searchCriteria.setProjectIds(new SetSearchField<>(CurrentProjectVariables.getProjectId()));
+            searchCriteria.setComponentIds(new SetSearchField<>(beanItem.getId()));
+            searchCriteria.setTypes(new SetSearchField<>(ProjectTypeConstants.BUG, ProjectTypeConstants.TASK));
+            searchCriteria.setOpen(new SearchField());
             updateSearchStatus();
 
-            this.with(header, bugList);
-        }
-
-        private void updateTypeSearchStatus(boolean selection, String type) {
-            SetSearchField<String> types = searchCriteria.getStatuses();
-            if (types == null) {
-                types = new SetSearchField<>();
-            }
-            if (selection) {
-                types.addValue(type);
-            } else {
-                types.removeValue(type);
-            }
-            searchCriteria.setStatuses(types);
-            updateSearchStatus();
+            this.with(header, ticketList);
         }
 
         private void updateSearchStatus() {
-            bugList.setSearchCriteria(searchCriteria);
-        }
-
-        private class BugStatusCheckbox extends CheckBox {
-            BugStatusCheckbox(final Enum name, boolean defaultValue) {
-                super(UserUIContext.getMessage(name), defaultValue);
-                this.addValueChangeListener(valueChangeEvent -> updateTypeSearchStatus(BugStatusCheckbox.this.getValue(), name.name()));
-            }
+            ticketList.setSearchCriteria(searchCriteria);
         }
     }
 }

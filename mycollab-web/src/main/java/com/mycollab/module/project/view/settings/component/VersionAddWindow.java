@@ -1,32 +1,33 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.settings.component;
 
 import com.mycollab.common.i18n.OptionI18nEnum.StatusI18nEnum;
 import com.mycollab.module.project.CurrentProjectVariables;
+import com.mycollab.module.project.ProjectRolePermissionCollections;
 import com.mycollab.module.project.ProjectTypeConstants;
 import com.mycollab.module.project.i18n.VersionI18nEnum;
 import com.mycollab.module.project.view.settings.VersionDefaultFormLayoutFactory;
-import com.mycollab.module.tracker.domain.Version;
-import com.mycollab.module.tracker.service.VersionService;
+import com.mycollab.module.project.domain.Version;
+import com.mycollab.module.project.service.VersionService;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
 import com.mycollab.vaadin.UserUIContext;
-import com.mycollab.vaadin.events.IEditFormHandler;
+import com.mycollab.vaadin.event.IEditFormHandler;
 import com.mycollab.vaadin.ui.AdvancedEditBeanForm;
 import com.mycollab.vaadin.web.ui.DefaultDynaFormLayout;
 import com.vaadin.ui.Alignment;
@@ -45,15 +46,17 @@ class VersionAddWindow extends MWindow implements IEditFormHandler<Version> {
         super(UserUIContext.getMessage(VersionI18nEnum.NEW));
         AdvancedEditBeanForm<Version> editForm = new AdvancedEditBeanForm<>();
         editForm.addFormHandler(this);
-        editForm.setFormLayoutFactory(new DefaultDynaFormLayout(ProjectTypeConstants.BUG_VERSION,
-                VersionDefaultFormLayoutFactory.getForm(), "id"));
+        editForm.setFormLayoutFactory(new DefaultDynaFormLayout(ProjectTypeConstants.VERSION,
+                VersionDefaultFormLayoutFactory.getAddForm(), "id"));
         editForm.setBeanFormFieldFactory(new VersionEditFormFieldFactory(editForm));
         Version version = new Version();
         version.setProjectid(CurrentProjectVariables.getProjectId());
-        version.setSaccountid(MyCollabUI.getAccountId());
+        version.setSaccountid(AppUI.getAccountId());
         version.setStatus(StatusI18nEnum.Open.name());
         editForm.setBean(version);
-        ComponentContainer buttonControls = generateEditFormControls(editForm, true, false, true);
+        ComponentContainer buttonControls = generateEditFormControls(editForm,
+                CurrentProjectVariables.canWrite(ProjectRolePermissionCollections.VERSIONS),
+                false, true);
         withWidth("750px").withModal(true).withResizable(false).withContent(new MVerticalLayout(editForm,
                 buttonControls).withAlign(buttonControls, Alignment.TOP_RIGHT)).withCenter();
     }

@@ -1,29 +1,29 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.vaadin.web.ui;
 
 import com.mycollab.core.MyCollabException;
 import com.mycollab.core.ResourceNotFoundException;
 import com.mycollab.core.SecureAccessException;
-import com.mycollab.eventmanager.EventBusFactory;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.module.user.accountsettings.view.AccountModulePresenter;
 import com.mycollab.security.PermissionChecker;
 import com.mycollab.security.PermissionMap;
-import com.mycollab.shell.events.ShellEvent;
+import com.mycollab.shell.event.ShellEvent;
 import com.mycollab.spring.AppContextUtil;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.mvp.*;
@@ -77,7 +77,7 @@ public abstract class AbstractPresenter<V extends PageView> implements IPresente
                 view.addDetachListener(detachEvent -> viewDetached());
                 postInitView();
             } catch (Exception e) {
-                LOG.error("Can not init view " + implClass, e);
+                throw new MyCollabException("Can not init view " + implClass, e);
             }
         }
     }
@@ -171,7 +171,7 @@ public abstract class AbstractPresenter<V extends PageView> implements IPresente
         } else if (getExceptionType(throwable, SecureAccessException.class) != null) {
             NotificationUtil.showMessagePermissionAlert();
         } else {
-            LOG.error("Exception", throwable);
+            throw new MyCollabException(throwable);
         }
     }
 }

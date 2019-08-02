@@ -1,18 +1,18 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.page;
 
@@ -80,10 +80,10 @@ class PageReportTemplateExecutor extends ReportTemplateExecutor {
         reportBuilder = report();
         titleContent = cmp.multiPageList();
         titleContent.add(defaultTitleComponent());
-        reportBuilder.setParameters(parameters);
+        reportBuilder.setParameters(getParameters());
         reportBuilder.title(titleContent).setPageFormat(PageType.A4, PageOrientation.PORTRAIT)
-                .pageFooter(cmp.pageXofY().setStyle(reportStyles.getBoldCenteredStyle()))
-                .setLocale(locale);
+                .pageFooter(cmp.pageXofY().setStyle(getReportStyles().getBoldCenteredStyle()))
+                .setLocale(getLocale());
     }
 
     @Override
@@ -101,8 +101,8 @@ class PageReportTemplateExecutor extends ReportTemplateExecutor {
 
     private void printForm(Page bean) {
         HorizontalListBuilder historyHeader = cmp.horizontalList().add(cmp.text(bean.getSubject())
-                .setStyle(reportStyles.getH3Style()));
-        titleContent.add(historyHeader, reportStyles.line(), cmp.verticalGap(10));
+                .setStyle(getReportStyles().getH3Style()));
+        titleContent.add(historyHeader, getReportStyles().line(), cmp.verticalGap(10));
         titleContent.add(cmp.text(StringUtils.formatRichText(bean.getContent())));
     }
 
@@ -113,10 +113,10 @@ class PageReportTemplateExecutor extends ReportTemplateExecutor {
         commentCriteria.setTypeId(StringSearchField.and(bean.getPath()));
         final int commentCount = commentService.getTotalCount(commentCriteria);
         HorizontalListBuilder historyHeader = cmp.horizontalList().add(cmp.text("Comments (" + commentCount + ")")
-                .setStyle(reportStyles.getH3Style()));
-        titleContent.add(historyHeader, reportStyles.line(), cmp.verticalGap(10));
+                .setStyle(getReportStyles().getH3Style()));
+        titleContent.add(historyHeader, getReportStyles().line(), cmp.verticalGap(10));
 
-        List<SimpleComment> comments = commentService.findPageableListByCriteria(new BasicSearchRequest<>(commentCriteria));
+        List<SimpleComment> comments = (List<SimpleComment>) commentService.findPageableListByCriteria(new BasicSearchRequest<>(commentCriteria));
         Collections.sort(comments, dateComparator.reverse());
         for (SimpleComment activity : comments) {
             titleContent.add(buildCommentBlock(activity), cmp.verticalGap(10));
@@ -125,9 +125,9 @@ class PageReportTemplateExecutor extends ReportTemplateExecutor {
 
     private ComponentBuilder buildCommentBlock(SimpleComment comment) {
         TextFieldBuilder<String> authorField = cmp.text(StringUtils.trimHtmlTags(UserUIContext.getMessage(GenericI18Enum.EXT_ADDED_COMMENT, comment.getOwnerFullName(),
-                UserUIContext.formatPrettyTime(comment.getCreatedtime())), Integer.MAX_VALUE)).setStyle(reportStyles.getMetaInfoStyle());
+                UserUIContext.formatPrettyTime(comment.getCreatedtime())), Integer.MAX_VALUE)).setStyle(getReportStyles().getMetaInfoStyle());
         HorizontalListBuilder infoHeader = cmp.horizontalFlowList().add(authorField);
         return cmp.verticalList(infoHeader, cmp.text(StringUtils.trimHtmlTags(comment.getComment(), Integer.MAX_VALUE)))
-                .setStyle(reportStyles.getBorderStyle());
+                .setStyle(getReportStyles().getBorderStyle());
     }
 }

@@ -1,28 +1,28 @@
 /**
- * This file is part of mycollab-web.
- *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * Copyright © MyCollab
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * mycollab-web is distributed in the hope that it will be useful,
+ * <p>
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view;
 
 import com.mycollab.common.i18n.ErrorI18nEnum;
 import com.mycollab.common.i18n.GenericI18Enum;
+import com.mycollab.core.utils.StringUtils;
 import com.mycollab.db.arguments.BasicSearchRequest;
 import com.mycollab.db.arguments.NumberSearchField;
 import com.mycollab.db.arguments.SearchField;
-import com.mycollab.core.utils.StringUtils;
-import com.mycollab.eventmanager.EventBusFactory;
+import com.mycollab.form.view.LayoutType;
 import com.mycollab.module.project.domain.SimpleProject;
 import com.mycollab.module.project.domain.criteria.ProjectSearchCriteria;
 import com.mycollab.module.project.event.ProjectEvent;
@@ -31,15 +31,17 @@ import com.mycollab.module.project.service.ProjectService;
 import com.mycollab.module.project.service.ProjectTemplateService;
 import com.mycollab.module.project.view.parameters.ProjectScreenData;
 import com.mycollab.spring.AppContextUtil;
-import com.mycollab.vaadin.MyCollabUI;
+import com.mycollab.vaadin.AppUI;
+import com.mycollab.vaadin.EventBusFactory;
 import com.mycollab.vaadin.UserUIContext;
 import com.mycollab.vaadin.mvp.PageActionChain;
 import com.mycollab.vaadin.ui.NotificationUtil;
 import com.mycollab.vaadin.web.ui.WebThemes;
 import com.mycollab.vaadin.web.ui.grid.GridFormLayoutHelper;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.ItemCaptionGenerator;
 import com.vaadin.ui.TextField;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
@@ -60,7 +62,7 @@ public class ProjectAddBaseTemplateWindow extends MWindow {
         super(UserUIContext.getMessage(OPT_CREATE_PROJECT_FROM_TEMPLATE));
         this.withModal(true).withClosable(true).withResizable(false).withWidth("550px");
         MVerticalLayout content = new MVerticalLayout();
-        GridFormLayoutHelper gridFormLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(1, 3);
+        GridFormLayoutHelper gridFormLayoutHelper = GridFormLayoutHelper.defaultFormLayoutHelper(LayoutType.ONE_COLUMN);
         final TemplateProjectComboBox templateProjectComboBox = new TemplateProjectComboBox();
         gridFormLayoutHelper.addComponent(templateProjectComboBox, UserUIContext.getMessage(FORM_TEMPLATE),
                 UserUIContext.getMessage(OPT_MARK_TEMPLATE_HELP), 0, 0);
@@ -90,12 +92,12 @@ public class ProjectAddBaseTemplateWindow extends MWindow {
                     (ProjectTemplateService.class);
             if (projectTemplateService != null) {
                 Integer newProjectId = projectTemplateService.cloneProject(templatePrj.getId(), newPrjName, newPrjKey,
-                        MyCollabUI.getAccountId(), UserUIContext.getUsername());
+                        AppUI.getAccountId(), UserUIContext.getUsername());
                 EventBusFactory.getInstance().post(new ProjectEvent.GotoMyProject(this,
                         new PageActionChain(new ProjectScreenData.Goto(newProjectId))));
                 close();
             }
-        }).withIcon(FontAwesome.SAVE).withStyleName(WebThemes.BUTTON_ACTION);
+        }).withIcon(VaadinIcons.CLIPBOARD).withStyleName(WebThemes.BUTTON_ACTION);
         MButton cancelBtn = new MButton(UserUIContext.getMessage(GenericI18Enum.BUTTON_CANCEL), clickEvent -> close())
                 .withStyleName(WebThemes.BUTTON_OPTION);
         MHorizontalLayout buttonControls = new MHorizontalLayout(cancelBtn, okBtn);
@@ -103,19 +105,16 @@ public class ProjectAddBaseTemplateWindow extends MWindow {
         this.setContent(content);
     }
 
-    private static class TemplateProjectComboBox extends ComboBox {
+    private static class TemplateProjectComboBox extends ComboBox<SimpleProject> {
         TemplateProjectComboBox() {
             ProjectService projectService = AppContextUtil.getSpringBean(ProjectService.class);
             ProjectSearchCriteria searchCriteria = new ProjectSearchCriteria();
             searchCriteria.addExtraField(ProjectSearchCriteria.p_template.buildParamIsEqual(SearchField.AND, 1));
-            searchCriteria.setSaccountid(new NumberSearchField(MyCollabUI.getAccountId()));
-            List<SimpleProject> projectTemplates = projectService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
-            this.setItemCaptionMode(ItemCaptionMode.EXPLICIT);
-            for (SimpleProject prjTemplate : projectTemplates) {
-                this.addItem(prjTemplate);
-                this.setItemCaption(prjTemplate, StringUtils.trim(String.format("[%s] %s", prjTemplate.getShortname(),
-                        prjTemplate.getName()), 50, true));
-            }
+            searchCriteria.setSaccountid(new NumberSearchField(AppUI.getAccountId()));
+            List<SimpleProject> projectTemplates = (List<SimpleProject>) projectService.findPageableListByCriteria(new BasicSearchRequest<>(searchCriteria));
+            this.setItems(projectTemplates);
+            this.setItemCaptionGenerator((ItemCaptionGenerator<SimpleProject>) item -> StringUtils.trim(String.format("[%s] %s", item.getShortname(),
+                    item.getName()), 50, true));
         }
     }
 }

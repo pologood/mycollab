@@ -1,23 +1,23 @@
 /**
- * This file is part of mycollab-services.
+ * Copyright © MyCollab
  *
- * mycollab-services is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-services is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-services.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.form.view.builder;
 
+import com.mycollab.form.view.LayoutType;
 import com.mycollab.form.view.builder.type.DynaSection;
-import com.mycollab.form.view.builder.type.DynaSection.LayoutType;
 
 /**
  * @author MyCollab Ltd.
@@ -33,6 +33,11 @@ public class DynaSectionBuilder {
 
     public DynaSectionBuilder header(Enum header) {
         section.setHeader(header);
+        return this;
+    }
+
+    public DynaSectionBuilder contextHelp(Enum help) {
+        section.setContextHelp(help);
         return this;
     }
 

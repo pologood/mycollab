@@ -1,26 +1,29 @@
 /**
- * This file is part of mycollab-core.
+ * Copyright © MyCollab
  *
- * mycollab-core is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-core is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-core.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.core.utils;
 
 import net.objectlab.kit.datecalc.common.DateCalculator;
-import net.objectlab.kit.datecalc.joda.LocalDateKitCalculatorsFactory;
-import org.joda.time.LocalDate;
+import net.objectlab.kit.datecalc.jdk8.LocalDateCalculator;
+import net.objectlab.kit.datecalc.jdk8.LocalDateKitCalculatorsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.LocalDate;
 
 /**
  * @author MyCollab Ltd
@@ -30,7 +33,7 @@ public class BusinessDayTimeUtils {
     private static Logger LOG = LoggerFactory.getLogger(BusinessDayTimeUtils.class);
 
     public static LocalDate plusDays(LocalDate refDate, int lagDate) {
-        DateCalculator<LocalDate> calc1;
+        LocalDateCalculator calc1;
         boolean isForward = false;
         if (lagDate >= 0) {
             calc1 = LocalDateKitCalculatorsFactory.forwardCalculator("MyCollab");
@@ -45,7 +48,6 @@ public class BusinessDayTimeUtils {
                 refDate = refDate.minusDays(1);
             }
         } else {
-            refDate.plusDays(1);
             while (calc1.isNonWorkingDay(refDate)) {
                 refDate = refDate.plusDays(1);
             }
@@ -71,7 +73,7 @@ public class BusinessDayTimeUtils {
                 candidateDuration -=1;
                 end = calc1.getCurrentBusinessDate();
             }
-            long possibleDurations = (end.toDate().getTime() - start.toDate().getTime()) / DateTimeUtils.MILLISECONDS_IN_A_DAY;
+            long possibleDurations = Duration.between(end, start).toDays();
             int varDays = Math.round((possibleDurations + 1) / 2);
             calc1.setStartDate(start);
             LocalDate testDate;
@@ -95,7 +97,7 @@ public class BusinessDayTimeUtils {
                     calc1.moveByBusinessDays(1);
                     testDate = calc1.getCurrentBusinessDate();
                     if (!testDate.isEqual(end)) {
-//                        LOG.error("Error while calculate duration of " + start + "--" + end);
+                        LOG.error("Error while calculate duration of " + start + "--" + end);
                     }
                     return candidateDuration + 1;
                 }

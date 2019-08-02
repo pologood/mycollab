@@ -1,25 +1,28 @@
 /**
- * This file is part of mycollab-web.
+ * Copyright © MyCollab
  *
- * mycollab-web is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * mycollab-web is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with mycollab-web.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.mycollab.module.project.view.user;
 
+import com.mycollab.module.project.view.BoardContainer;
 import com.mycollab.module.project.view.ProjectBreadcrumb;
+import com.mycollab.module.project.view.ProjectModule;
 import com.mycollab.vaadin.mvp.ScreenData;
 import com.mycollab.vaadin.mvp.ViewManager;
 import com.mycollab.vaadin.web.ui.AbstractPresenter;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HasComponents;
 
 /**
@@ -34,12 +37,12 @@ public class ProjectSearchItemPresenter extends AbstractPresenter<ProjectSearchI
 
     @Override
     protected void onGo(HasComponents container, ScreenData<?> data) {
-        ProjectDashboardContainer projectViewContainer = (ProjectDashboardContainer) container;
-        projectViewContainer.setContent(view);
+        BoardContainer boardContainer = (BoardContainer) container;
+        CssLayout contentWrapper = boardContainer.getContentWrapper();
+        contentWrapper.removeAllComponents();
+        contentWrapper.addComponent(view);
+
         String params = (String) data.getParams();
         view.displayResults(params);
-
-        ProjectBreadcrumb breadcrumb = ViewManager.getCacheComponent(ProjectBreadcrumb.class);
-        breadcrumb.gotoSearchProjectItems();
     }
 }
